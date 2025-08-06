@@ -62,9 +62,26 @@ window.addEventListener('keydown', (event) => {
         parachute.velocity = new Vector3(0, 0, 0);
         parachute.angularVelocity = new Vector3(0, 0, 0);
         parachute.orientation = new Vector3(0, 0, 0);
+        parachute.reachedTerminalVelocity = false;
         console.log('🔄 تم إعادة تعيين المحاكاة إلى الوضع الابتدائي');
         break;
-}
+
+    case '1':
+      parachute.surfaceType = 'hard';
+      console.log('🪨 تم اختيار سطح صلب');
+      break;
+    case '2':
+      parachute.surfaceType = 'sand';
+      console.log('🏖️ تم اختيار سطح رملي');
+      break;
+    case '3':
+      parachute.surfaceType = 'water';
+      console.log('🌊 تم اختيار سطح مائي');
+      break;
+    case '4':
+      parachute.surfaceType = 'ice';
+      console.log('❄️ تم اختيار سطح جليدي]');
+    }
 
 });
 
