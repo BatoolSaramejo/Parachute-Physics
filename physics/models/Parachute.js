@@ -20,8 +20,6 @@ constructor(options) {
   this.openArea = options.openArea || 15;
   this.area = this.closedArea;
 
-  this.surfaceType = 'hard'; // نوع سطح التصادم: 'hard', 'sand', 'water'
-
 
   this.isParachuteOpen = false;
   this.bodyPostureFactor = 1.0; // عامل الوضعية في البداية
@@ -45,8 +43,7 @@ constructor(options) {
   this.yawDampingCoeff = 0.1;       //معامل مقاومة الدوران
   this.armLength = 0.5;
   this.momentOfInertia = MOMENT_OF_INERTIA; // I (kg·m²)
-
-  this.reachedTerminalVelocity = false; 
+    this.windVelocity = options.windVelocity || new Vector3(0, 0, 0); // مثلاً، رياح أفقية
 
   }
 
@@ -61,20 +58,36 @@ constructor(options) {
   }
 
 
-  dragForce() {
-  const relativeVelocity = this.velocity;
-  const speed = relativeVelocity.magnitude();
-  const baseArea = this.isParachuteOpen ? this.openArea : this.closedArea;
-  const area = baseArea * this.bodyPostureFactor; 
-  const rho = this.dynamicAirDensity(); 
-  const dragMagnitude = 0.5 * rho * this.dragCoeff * area * speed * speed;
+  // dragForce() {
+  // const relativeVelocity = this.velocity;
+  // const speed = relativeVelocity.magnitude();
+  // const baseArea = this.isParachuteOpen ? this.openArea : this.closedArea;
+  // const area = baseArea * this.bodyPostureFactor; 
+  // const rho = this.dynamicAirDensity(); 
+  // const dragMagnitude = 0.5 * rho * this.dragCoeff * area * speed * speed;
 
-  const dragDirection = speed === 0
-    ? new Vector3()
-    : relativeVelocity.normalize().negate();
+  // const dragDirection = speed === 0
+  //   ? new Vector3()
+  //   : relativeVelocity.normalize().negate();
+
+  // return dragDirection.scale(dragMagnitude);
+  // }
+  // في ملف Parachute.js
+dragForce() {
+  // حساب السرعة النسبية للمظلي بالنسبة للرياح
+  const relativeVelocity = this.velocity.subtract(this.windVelocity);
+  const speed = relativeVelocity.magnitude();
+  const baseArea = this.isParachuteOpen ? this.openArea : this.closedArea; 
+  const area = baseArea * this.bodyPostureFactor;  
+  const rho = this.dynamicAirDensity();  
+  const dragMagnitude = 0.5 * rho * this.dragCoeff * area * speed * speed; 
+
+  const dragDirection = speed === 0 
+    ? new Vector3() 
+    : relativeVelocity.normalize().negate(); 
 
   return dragDirection.scale(dragMagnitude);
-  }
+}
 
 
   tensionForce() {
@@ -93,8 +106,7 @@ constructor(options) {
     return new Vector3(diff * 0.001, 0, diff * 0.001); // small lateral drift scaling
   }
 
-  impactForce(deltaV) {
-    const deltaT = this.computeCollisionDeltaTime();
+  impactForce(deltaV, deltaT = COLLISION_DELTA_TIME) {
     const magnitude = this.mass * deltaV / deltaT;
     return new Vector3(0, magnitude, 0); // للأعلى
   }
@@ -133,9 +145,9 @@ constructor(options) {
 
 
     if (this.position.y <= 0) {
-      // استدعاء تابع التصادم
-      const deltaV = Math.abs(this.velocity.y);
-      total = total.add(this.impactForce(deltaV)); 
+      //const deltaV = Math.abs(this.velocity.y);
+     // total = total.add(this.impactForce(deltaV, COLLISION_DELTA_TIME));
+      total = total.add(this.impactForce(Math.abs(this.velocity.y)));
     }
 
     return total;
@@ -144,17 +156,6 @@ constructor(options) {
   accelerationVector() { 
     const netForce = this.totalForce();
     return netForce.scale(1 / this.mass);
-  }
-
-  //تابع حساب الزمن حسب نوع السطح
-  computeCollisionDeltaTime() {
-  switch(this.surfaceType) {
-    case 'hard': return 0.1;  // أرض صلبة (زمن توقف سريع)
-    case 'ice': return 0.3; // ارض جليدية
-    case 'sand': return 0.5;  // رمل (زمن توقف أبطأ)
-    case 'water': return 1.0; // ماء (زمن توقف أطول)
-    default: return 0.2;      // افتراضي
-    }
   }
 
  
@@ -167,12 +168,6 @@ constructor(options) {
     this.orientation = this.orientation.add(this.angularVelocity.scale(dt));
 
     this.acceleration = this.accelerationVector();
-    const accelerationMagnitude = this.acceleration.magnitude();
-    if (!this.reachedTerminalVelocity && accelerationMagnitude < 0.01) {
-      console.log('✅ تم الوصول للسرعة الحدية');
-      this.reachedTerminalVelocity = true; //  لعدم الطباعة المتكررة
-    }
-
     this.velocity = this.velocity.add(this.acceleration.scale(dt));
     this.position = this.position.add(this.velocity.scale(dt));
     this.yawAngle = this.orientation.y;

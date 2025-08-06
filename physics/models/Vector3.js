@@ -34,4 +34,6 @@ export class Vector3 {
   toString() {
     return `(${this.x.toFixed(2)}, ${this.y.toFixed(2)}, ${this.z.toFixed(2)})`;
   }
+  subtract(v) {
+    return new Vector3(this.x - v.x, this.y - v.y, this.z - v.z);}
 }

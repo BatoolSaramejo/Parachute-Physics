@@ -1,11 +1,126 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <title>Parachute Physics</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>محاكاة المظلي</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f4; color: #333; }
+        .controls-container {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 15px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            direction: rtl;
+            text-align: right;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            max-width: 600px;
+        }
+        .controls-section {
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .controls-section h3 { margin-top: 0; }
+        .control-group { margin-bottom: 15px; }
+        .control-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .control-group input[type="number"] { width: 80px; padding: 5px; border: 1px solid #ccc; border-radius: 4px; }
+        .control-group button { 
+            padding: 8px 12px; 
+            cursor: pointer; 
+            background-color: #007BFF; 
+            color: white; 
+            border: none; 
+            border-radius: 4px; 
+            margin-left: 5px;
+            font-weight: bold;
+            display: inline-block;
+        }
+        .control-group button:hover { background-color: #0056b3; }
+        .full-width-btn { width: 100%; margin-top: 10px; }
+        .toggle-btn { background-color: #28a745; }
+        .toggle-btn:hover { background-color: #218838; }
+        pre {
+            background-color: #eee;
+            padding: 10px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            margin: 0;
+        }
+    </style>
 </head>
 <body>
-  <h1>Check Console (F12)</h1>
-  <script type="module" src="main.js"></script>
+
+    <div class="controls-container">
+        <div class="controls-section">
+            <h3>💨 تحكم الرياح (م/ث)</h3>
+            <div class="control-group">
+                <label for="windX">محور X:</label>
+                <input type="number" id="windX" value="0" step="1">
+            </div>
+            <div class="control-group">
+    <label for="windY">محور Y:</label>
+    <input type="number" id="windY" value="0" step="1">
+</div>
+            <div class="control-group">
+                <label for="windZ">محور Z:</label>
+                <input type="number" id="windZ" value="0" step="1">
+            </div>
+            <button id="setWindBtn">تطبيق</button>
+            <button id="stopWindBtn">إيقاف</button>
+        </div>
+        
+        <div class="controls-section">
+            <h3>🪂 وضعية الجسم والمظلة</h3>
+            <div class="control-group">
+                <button id="postureOpenBtn">🤸‍♂️ نشر اليدين</button>
+                <button id="postureCloseBtn">🧍‍♂️ ضم اليدين</button>
+            </div>
+            <div class="control-group">
+                <button id="parachuteToggleBtn" class="full-width-btn toggle-btn">🪂 فتح/إغلاق المظلة</button>
+            </div>
+        </div>
+
+        <div class="controls-section">
+            <h3>🪢 تحكم الشد (نيوتن)</h3>
+            <div class="control-group">
+                <label for="tensionLeft">شد الحبل الأيسر:</label>
+                <input type="number" id="tensionLeft" value="0" step="50">
+            </div>
+            <div class="control-group">
+                <label for="tensionRight">شد الحبل الأيمن:</label>
+                <input type="number" id="tensionRight" value="0" step="50">
+            </div>
+            <button id="setTensionBtn">تطبيق الشد</button>
+        </div>
+        
+        <div class="controls-section">
+            <h3>🧪 المعاملات الفيزيائية</h3>
+            <div class="control-group">
+                <label for="armLength">طول الذراع (م):</label>
+                <input type="number" id="armLength" value="0.5" step="0.05">
+            </div>
+            <div class="control-group">
+                <label for="yawDampingCoeff">معامل مقاومة الدوران:</label>
+                <input type="number" id="yawDampingCoeff" value="0.1" step="0.01">
+            </div>
+            <button id="setCoeffBtn">تطبيق المعاملات</button>
+        </div>
+        
+        <!-- <div class="controls-section">
+            <h3>⚙️ تحكم عام</h3>
+            <button id="resetBtn" class="full-width-btn">🔄 إعادة تعيين المحاكاة</button>
+        </div> -->
+
+    </div>
+
+    <canvas id="simulationCanvas" style="display:none;"></canvas>
+
+    <script type="module" src="main.js"></script>
 </body>
 </html>
