@@ -44,7 +44,8 @@ export class Parachute {
 
     this.reachedTerminalVelocity = false;
     this.hasStoppedRotation = false; // متغير جديد لمنع تكرار الرسالة
-  }
+     this.wind = options.wind || new Vector3(0, 0, 0);
+ }
 
   dynamicAirDensity() {
     const scaleHeight = 8500; // meters
@@ -55,21 +56,38 @@ export class Parachute {
     return new Vector3(0, -this.mass * this.gravity, 0);
   }
 
-  dragForce() {
-    const relativeVelocity = this.velocity;
+  // dragForce() {
+  //   const relativeVelocity = this.velocity;
+  //   const speed = relativeVelocity.magnitude();
+  //   const baseArea = this.isParachuteOpen ? this.openArea : this.closedArea;
+  //   const area = baseArea * this.bodyPostureFactor * this.legPostureFactor; // إضافة legPostureFactor
+  //   const rho = this.dynamicAirDensity(); 
+  //   const dragMagnitude = 0.5 * rho * this.dragCoeff * area * speed * speed;
+
+  //   const dragDirection = speed === 0
+  //     ? new Vector3()
+  //     : relativeVelocity.normalize().negate();
+
+  //   return dragDirection.scale(dragMagnitude);
+  // }
+// في ملف Parachute.js
+
+dragForce() {
+    // حساب السرعة النسبية (سرعة المظلي - سرعة الرياح)
+    const relativeVelocity = this.velocity.subtract(this.wind);
+    
     const speed = relativeVelocity.magnitude();
     const baseArea = this.isParachuteOpen ? this.openArea : this.closedArea;
-    const area = baseArea * this.bodyPostureFactor * this.legPostureFactor; // إضافة legPostureFactor
-    const rho = this.dynamicAirDensity(); 
+    const area = baseArea * this.bodyPostureFactor * this.legPostureFactor;
+    const rho = this.dynamicAirDensity();
     const dragMagnitude = 0.5 * rho * this.dragCoeff * area * speed * speed;
 
     const dragDirection = speed === 0
-      ? new Vector3()
-      : relativeVelocity.normalize().negate();
+        ? new Vector3()
+        : relativeVelocity.normalize().negate();
 
     return dragDirection.scale(dragMagnitude);
-  }
-
+}
   tensionForce() {
     const totalTension = this.tensionLeft + this.tensionRight;
     const clamped = Math.min(totalTension, MAX_TENSION_FORCE);
