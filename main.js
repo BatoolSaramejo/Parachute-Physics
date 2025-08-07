@@ -1,6 +1,9 @@
+
 import { Parachute } from './physics/models/Parachute.js';
+import { Simulator } from './physics/simulator/Simulator.js';
 import { Vector3 } from './physics/models/Vector3.js';
-// لا نحتاج لـ Simulator في هذا الملف، فقط في ملف المحاكاة الرئيسي.
+
+let isSimulationRunning = true;
 
 const parachute = new Parachute({
   mass: 90,
@@ -9,108 +12,125 @@ const parachute = new Parachute({
   dragCoeff: 1.2,
   initialHeight: 1500
 });
-
 window.parachute = parachute;
 
-// الحصول على عناصر الواجهة
-// قسم الرياح
-const windXInput = document.getElementById('windX');
-const windYInput = document.getElementById('windY');
-
-const windZInput = document.getElementById('windZ');
-const setWindBtn = document.getElementById('setWindBtn');
-const stopWindBtn = document.getElementById('stopWindBtn');
-
-// قسم وضعية الجسم والمظلة
-const postureOpenBtn = document.getElementById('postureOpenBtn');
-const postureCloseBtn = document.getElementById('postureCloseBtn');
-const parachuteToggleBtn = document.getElementById('parachuteToggleBtn');
-
-// قسم الشد
-const tensionLeftInput = document.getElementById('tensionLeft');
-const tensionRightInput = document.getElementById('tensionRight');
-const setTensionBtn = document.getElementById('setTensionBtn');
-
-// قسم المعاملات
-const armLengthInput = document.getElementById('armLength');
-const yawDampingCoeffInput = document.getElementById('yawDampingCoeff');
-const setCoeffBtn = document.getElementById('setCoeffBtn');
-
-// قسم التحكم العام
-//const resetBtn = document.getElementById('resetBtn');
-
-// ربط أحداث النقر بالوظائف
-// الرياح
-
-setWindBtn.addEventListener('click', () => {
-    const windX = parseFloat(windXInput.value);
-    const windY = parseFloat(windYInput.value); // إضافة هذا السطر
-    const windZ = parseFloat(windZInput.value);
-    parachute.windVelocity.x = windX;
-    parachute.windVelocity.y = windY; // إضافة هذا السطر
-    parachute.windVelocity.z = windZ;
-    console.log(`🌬️ تم تطبيق سرعة الرياح: X=${windX}، Y=${windY}، Z=${windZ}`);
+window.addEventListener('keydown', (event) => {
+  switch (event.key) {
+    case 'n':
+      parachute.changePosture(1.5);
+      console.log('🤸‍♂️ تم نشر اليدين (وضعية أكبر تزيد مقاومة الهواء)');
+      break;
+    case 'm':
+      parachute.changePosture(1.0);
+      console.log('🧍‍♂️ تم ضم اليدين (وضعية أصغر تقلل مقاومة الهواء)');
+      break;
+    case 'b':
+      parachute.changeLegPosture(1.5);
+      console.log('🦵 تم نشر الرجلين (وضعية أكبر تزيد مقاومة الهواء)');
+      break;
+    case 'v':
+      parachute.changeLegPosture(1.0);
+      console.log('🦵 تم ضم الرجلين (وضعية أصغر تقلل مقاومة الهواء)');
+      break;
+    case 'p':
+      parachute.isParachuteOpen = !parachute.isParachuteOpen;
+      console.log(parachute.isParachuteOpen ? '🪂 تم فتح المظلة' : '🎒 تم إغلاق المظلة');
+      break;
+    case 'q':
+      parachute.tensionLeft += 50;
+      console.log(`⬅️ زيادة الشد في الجهة اليسرى إلى ${parachute.tensionLeft} نيوتن`);
+      break;
+    case 'e':
+      parachute.tensionRight += 50;
+      console.log(`➡️ زيادة الشد في الجهة اليمنى إلى ${parachute.tensionRight} نيوتن`);
+      break;
+    case 'a':
+      parachute.tensionLeft = Math.max(0, parachute.tensionLeft - 50);
+      console.log(`⬅️ تقليل الشد في الجهة اليسرى إلى ${parachute.tensionLeft} نيوتن`);
+      break;
+    case 'd':
+      parachute.tensionRight = Math.max(0, parachute.tensionRight - 50);
+      console.log(`➡️ تقليل الشد في الجهة اليمنى إلى ${parachute.tensionRight} نيوتن`);
+      break;
+    case 'z':
+      parachute.armLength += 0.05;
+      console.log(`🦾 زيادة طول الذراع إلى ${parachute.armLength.toFixed(2)} متر`);
+      break;
+    case 'x':
+      parachute.armLength = Math.max(0.1, parachute.armLength - 0.05);
+      console.log(`🦿 تقليل طول الذراع إلى ${parachute.armLength.toFixed(2)} متر`);
+      break;
+    case 'c':
+      parachute.yawDampingCoeff += 0.01;
+      console.log(`🌀 زيادة معامل مقاومة الدوران إلى ${parachute.yawDampingCoeff.toFixed(2)}`);
+      break;
+    case 'f':
+      parachute.yawDampingCoeff = Math.max(0, parachute.yawDampingCoeff - 0.01);
+      console.log(`🌀 تقليل معامل مقاومة الدوران إلى ${parachute.yawDampingCoeff.toFixed(2)}`);
+      break;
+    case 'r':
+      parachute.position = new Vector3(0, 1500, 0);
+      parachute.velocity = new Vector3(0, 0, 0);
+      parachute.angularVelocity = new Vector3(0, 0, 0);
+      parachute.orientation = new Vector3(0, 0, 0);
+      parachute.yawAngle = 0;
+      parachute.hasStoppedRotation = false; // إعادة تعيين حالة الرسالة
+      console.log('🔄 إعادة تعيين المحاكاة');
+      isSimulationRunning = true;
+      animate();
+      break;
+    case 's':
+      isSimulationRunning = !isSimulationRunning;
+      console.log(isSimulationRunning ? '▶️ استئناف المحاكاة' : '⏸️ إيقاف المحاكاة');
+      if (isSimulationRunning) animate();
+      break;
+    case '1':
+      parachute.surfaceType = 'hard';
+      console.log('🪨 تم اختيار سطح صلب');
+      break;
+    case '2':
+      parachute.surfaceType = 'sand';
+      console.log('🏖️ تم اختيار سطح رملي');
+      break;
+    case '3':
+      parachute.surfaceType = 'water';
+      console.log('🌊 تم اختيار سطح مائي');
+      break;
+    case '4':
+      parachute.surfaceType = 'ice';
+      console.log('❄️ تم اختيار سطح جليدي');
+      break;
+    // 🌬️ مفاتيح جديدة للتحكم بالرياح
+    case 'ArrowUp':
+      parachute.wind.z -= 1;
+      console.log(`💨 زيادة قوة الرياح على محور Z إلى ${parachute.wind.z.toFixed(2)}`);
+      break;
+    case 'ArrowDown':
+      parachute.wind.z += 1;
+      console.log(`💨 تقليل قوة الرياح على محور Z إلى ${parachute.wind.z.toFixed(2)}`);
+      break;
+    case 'ArrowLeft':
+      parachute.wind.x -= 1;
+      console.log(`💨 زيادة قوة الرياح على محور X إلى ${parachute.wind.x.toFixed(2)}`);
+      break;
+    case 'ArrowRight':
+      parachute.wind.x += 1;
+      console.log(`💨 تقليل قوة الرياح على محور X إلى ${parachute.wind.x.toFixed(2)}`);
+      break;
+  }
 });
-
-stopWindBtn.addEventListener('click', () => {
-    parachute.windVelocity = new Vector3(0, 0, 0);
-    windXInput.value = 0;
-    windYInput.value = 0; // إضافة هذا السطر
-    windZInput.value = 0;
-    console.log('🌬️ تم إيقاف الرياح تمامًا.');
-});
-// وضعية الجسم والمظلة
-postureOpenBtn.addEventListener('click', () => {
-    parachute.changePosture(1.5);
-    console.log('🤸‍♂️ تم نشر اليدين (وضعية أكبر تزيد مقاومة الهواء)');
-});
-postureCloseBtn.addEventListener('click', () => {
-    parachute.changePosture(1.0);
-    console.log('🧍‍♂️ تم ضم اليدين (وضعية أصغر تقلل مقاومة الهواء)');
-});
-parachuteToggleBtn.addEventListener('click', () => {
-    parachute.isParachuteOpen = !parachute.isParachuteOpen;
-    console.log(parachute.isParachuteOpen ? '🪂 تم فتح المظلة' : '🎒 تم إغلاق المظلة');
-});
-
-// الشد
-setTensionBtn.addEventListener('click', () => {
-    const tensionLeft = parseFloat(tensionLeftInput.value);
-    const tensionRight = parseFloat(tensionRightInput.value);
-    parachute.tensionLeft = tensionLeft;
-    parachute.tensionRight = tensionRight;
-    console.log(`🪢 تم تطبيق الشد: يسار=${tensionLeft}N، يمين=${tensionRight}N`);
-});
-
-// المعاملات
-setCoeffBtn.addEventListener('click', () => {
-    const armLength = parseFloat(armLengthInput.value);
-    const yawDampingCoeff = parseFloat(yawDampingCoeffInput.value);
-    parachute.armLength = armLength;
-    parachute.yawDampingCoeff = yawDampingCoeff;
-    console.log(`⚙️ تم تطبيق المعاملات: طول الذراع=${armLength}m، معامل الدوران=${yawDampingCoeff}`);
-});
-
-// // التحكم العام
-// resetBtn.addEventListener('click', () => {
-//     parachute.position = new Vector3(0, 1500, 0);
-//     parachute.velocity = new Vector3(0, 0, 0);
-//     parachute.angularVelocity = new Vector3(0, 0, 0);
-//     parachute.orientation = new Vector3(0, 0, 0);
-//     console.log('🔄 تم إعادة تعيين المحاكاة إلى الوضع الابتدائي');
-// });
 
 function animate() {
-    parachute.update(0.05);
-    console.log(`Pos: ${parachute.position.toString()} | Vel: ${parachute.velocity.toString()}`);
-    console.log(`Yaw Angle: ${(parachute.yawAngle * 180 / Math.PI).toFixed(2)}°`);
-    console.log(`Wind Velocity: ${parachute.windVelocity.toString()}`);
-    
-    if (parachute.position.y > 0) {
-        requestAnimationFrame(animate);
-    } else {
-        console.log('✅ Reached Ground');
-    }
+  if (!isSimulationRunning) return;
+  parachute.update(0.05);
+  // ⚠️ إضافة متجه الرياح للطباعة
+  console.log(`Pos: ${parachute.position.toString()} | Vel: ${parachute.velocity.toString()} | Wind: ${parachute.wind.toString()}`);
+  console.log(`Yaw Angle: ${parachute.yawAngle.toFixed(2)}°`);
+  if (parachute.position.y > 0) {
+    requestAnimationFrame(animate);
+  } else {
+    console.log('✅ Reached Ground');
+  }
 }
 
 window.animate = animate;
