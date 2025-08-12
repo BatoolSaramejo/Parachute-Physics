@@ -11,18 +11,16 @@ const scene = new THREE.Scene();
 
 // initialize texture loader
 const textureLoader = new THREE.TextureLoader();
-const cubeTextureLoader = new THREE.CubeTextureLoader();
-cubeTextureLoader.setPath("textures/cubeMap/");
 
 // add skybox
 
 let materialArray = [];
-let texture_ft = new THREE.TextureLoader().load("textures/cubeMap/px.png");
-let texture_bk = new THREE.TextureLoader().load("textures/cubeMap/nx.png");
-let texture_up = new THREE.TextureLoader().load("textures/cubeMap/py.png");
-let texture_dn = new THREE.TextureLoader().load("textures/cubeMap/ny.png");
-let texture_rt = new THREE.TextureLoader().load("textures/cubeMap/pz.png");
-let texture_lf = new THREE.TextureLoader().load("textures/cubeMap/nz.png");
+let texture_ft = new THREE.TextureLoader().load("drow/static/textures/cubeMap/px.png");
+let texture_bk = new THREE.TextureLoader().load("drow/static/textures/cubeMap/nx.png");
+let texture_up = new THREE.TextureLoader().load("drow/static/textures/cubeMap/py.png");
+let texture_dn = new THREE.TextureLoader().load("drow/static/textures/cubeMap/ny.png");
+let texture_rt = new THREE.TextureLoader().load("drow/static/textures/cubeMap/pz.png");
+let texture_lf = new THREE.TextureLoader().load("drow/static/textures/cubeMap/nz.png");
 
 materialArray.push(new THREE.MeshBasicMaterial({ map: texture_ft }));
 materialArray.push(new THREE.MeshBasicMaterial({ map: texture_bk }));
@@ -65,14 +63,14 @@ const keysPressed = {
 // add plane model
 const loader = new GLTFLoader();
 
-loader.load("/models/plane.glb", (gltf) => {
+loader.load("drow/static/models/plane.glb", (gltf) => {
   planeModel = gltf.scene;
   planeModel.scale.setScalar(5);
   planeModel.position.set(0, 0, -20000); // Start behind the camera
   scene.add(planeModel);
 });
 
-loader.load("/models/SPONGEBOB.glb", (gltf) => {
+loader.load("drow/static/models/SPONGEBOB.glb", (gltf) => {
   spongebobModel = gltf.scene;
   spongebobModel.scale.setScalar(10);
   spongebobModel.position.set(0, -1000, 0); // Hide initially
