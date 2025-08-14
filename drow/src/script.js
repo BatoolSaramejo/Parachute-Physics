@@ -12,15 +12,31 @@ const scene = new THREE.Scene();
 // initialize texture loader
 const textureLoader = new THREE.TextureLoader();
 
+const parachuteTexture = textureLoader.load(
+  "drow/static/textures/parachute.jpg"
+);
+
 // add skybox
 
 let materialArray = [];
-let texture_ft = new THREE.TextureLoader().load("drow/static/textures/cubeMap/px.png");
-let texture_bk = new THREE.TextureLoader().load("drow/static/textures/cubeMap/nx.png");
-let texture_up = new THREE.TextureLoader().load("drow/static/textures/cubeMap/py.png");
-let texture_dn = new THREE.TextureLoader().load("drow/static/textures/cubeMap/ny.png");
-let texture_rt = new THREE.TextureLoader().load("drow/static/textures/cubeMap/pz.png");
-let texture_lf = new THREE.TextureLoader().load("drow/static/textures/cubeMap/nz.png");
+let texture_ft = new THREE.TextureLoader().load(
+  "drow/static/textures/cubeMap/px.jpg"
+);
+let texture_bk = new THREE.TextureLoader().load(
+  "drow/static/textures/cubeMap/nx.jpg"
+);
+let texture_up = new THREE.TextureLoader().load(
+  "drow/static/textures/cubeMap/py.jpg"
+);
+let texture_dn = new THREE.TextureLoader().load(
+  "drow/static/textures/cubeMap/ny.jpg"
+);
+let texture_rt = new THREE.TextureLoader().load(
+  "drow/static/textures/cubeMap/pz.jpg"
+);
+let texture_lf = new THREE.TextureLoader().load(
+  "drow/static/textures/cubeMap/nz.jpg"
+);
 
 materialArray.push(new THREE.MeshBasicMaterial({ map: texture_ft }));
 materialArray.push(new THREE.MeshBasicMaterial({ map: texture_bk }));
@@ -35,54 +51,51 @@ let skyboxGeo = new THREE.BoxGeometry(50000, 50000, 50000);
 let skybox = new THREE.Mesh(skyboxGeo, materialArray);
 skybox.position.y = -5000;
 scene.add(skybox);
+// console.log(Tweakpane.version);
+// pane.addInput(
+//   skybox.position, // The object to bind
+//   'y',             // The property
+//   {
+//     label: 'Skybox Y',
+//     min: -10000,
+//     max: 10000,
+//     step: 1
+//   }
+// );
 
 // add something
 let planeModel = null;
-let spongebobModel = null;
+let pilotModel = null;
 let parachuteModel = null;
 
-let isSpongebobDropping = false;
-let spongebobHasParachute = false;
-let hKeyPressed = false;
+let ispilotDropping = false;
+let pilotHasParachute = false;
 
-let currentCameraTarget = "plane"; // or "spongebob"
-
-const keysPressed = {
-  ArrowUp: false,
-  ArrowDown: false,
-  ArrowLeft: false,
-  ArrowRight: false,
-  a: false, // rotate left
-  d: false, // rotate right
-  w: false, // rotate X up
-  s: false, // rotate X down
-  q: false, // move up
-  e: false, // move down
-};
+let currentCameraTarget = "pilot"; // or "pilot"
 
 // add plane model
 const loader = new GLTFLoader();
 
-loader.load("drow/static/models/plane.glb", (gltf) => {
+loader.load("drow/static/models/helicopter.glb", (gltf) => {
   planeModel = gltf.scene;
-  planeModel.scale.setScalar(5);
-  planeModel.position.set(0, 0, -20000); // Start behind the camera
+  planeModel.scale.setScalar(0.4);
+  planeModel.position.set(0, 0, 0);
   scene.add(planeModel);
 });
 
-loader.load("drow/static/models/SPONGEBOB.glb", (gltf) => {
-  spongebobModel = gltf.scene;
-  spongebobModel.scale.setScalar(10);
-  spongebobModel.position.set(0, -1000, 0); // Hide initially
-  spongebobModel.visible = false;
-  scene.add(spongebobModel);
+loader.load("drow/static/models/PILOT.glb", (gltf) => {
+  pilotModel = gltf.scene;
+  pilotModel.scale.setScalar(10);
+  pilotModel.position.set(0, 0, 0); // Hide initially
+  pilotModel.visible = false;
+  scene.add(pilotModel);
 });
 
 // draw parachute
 function createParachute() {
   const object = new THREE.Group();
 
-  const canopyMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+  const canopyMaterial = new THREE.MeshBasicMaterial({ map: parachuteTexture });
 
   const canopyPoints = [
     new THREE.Vector2(1.5, 0),
@@ -144,10 +157,8 @@ const camera = new THREE.PerspectiveCamera(
   75,
   window.innerWidth / window.innerHeight,
   0.1,
-  80000
+  100000
 );
-camera.position.z = 100;
-camera.position.y = 5;
 
 // initialize the renderer
 const canvas = document.querySelector("canvas.threejs");
@@ -162,61 +173,34 @@ window.addEventListener("resize", () => {
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
-let dropSpeed = 10;
+let dropSpeed = 50;
 
 // add keyboard listener
-
 window.addEventListener("keydown", (event) => {
-  if (event.key === "h") {
-    hKeyPressed = true;
-  }
-
-  if (hKeyPressed && event.key === "+") {
-    if (planeModel) planeModel.position.y += 1;
-  }
-
-  if (hKeyPressed && event.key === "-") {
-    if (planeModel) planeModel.position.y -= 1;
-  }
-
   if (event.key === "Enter") {
-    if (spongebobModel && planeModel && !isSpongebobDropping) {
-      spongebobModel.visible = true;
-      spongebobModel.position.set(
+    if (pilotModel && planeModel && !ispilotDropping) {
+      pilotModel.visible = true;
+      pilotModel.position.set(
         planeModel.position.x,
         planeModel.position.y - 5,
         planeModel.position.z
       );
-      isSpongebobDropping = true;
-      currentCameraTarget = "spongebob";
+      ispilotDropping = true;
+      currentCameraTarget = "pilot";
     }
   }
 
   if (event.key === "o") {
     dropSpeed = 5;
-    if (spongebobModel && !spongebobHasParachute && isSpongebobDropping) {
+    if (pilotModel && !pilotHasParachute && ispilotDropping) {
       const parachute = createParachute();
-      parachute.position.set(0, 2.6, 0);
-      parachute.scale.setScalar(1);
+      parachute.position.set(0, 3.2, 0);
+      parachute.scale.setScalar(1.1);
 
-      spongebobModel.add(parachute);
-      spongebobHasParachute = true;
+      pilotModel.add(parachute);
+      pilotHasParachute = true;
       parachuteModel = parachute;
     }
-  }
-
-  if (event.key in keysPressed) {
-    keysPressed[event.key] = true;
-  }
-});
-
-window.addEventListener("keyup", (event) => {
-  if (event.key === "h") {
-    hKeyPressed = false;
-  }
-
-  if (event.key in keysPressed) {
-    keysPressed[event.key] = false;
   }
 });
 
@@ -229,19 +213,12 @@ window.addEventListener("mousemove", (event) => {
   cursor.y = -(event.clientY / window.innerHeight - 0.5);
 });
 
-const speed = 2;
-const rotationSpeed = 0.02;
-
 // render loop
 const renderloop = () => {
-  if (planeModel) {
-    planeModel.position.z += 20; // Move forward
-  }
-
-  if (isSpongebobDropping && spongebobModel) {
-    spongebobModel.position.y -= dropSpeed; // Drop speed
-    if (spongebobModel.position.y <= -29995) {
-      isSpongebobDropping = false;
+  if (ispilotDropping && pilotModel) {
+    pilotModel.position.y = Math.max(pilotModel.position.y - dropSpeed, -29999); // Drop speed
+    if (pilotModel.position.y <= -29999) {
+      ispilotDropping = false;
       // Hide the parachute if it exists
       if (parachuteModel) {
         parachuteModel.visible = false;
@@ -249,65 +226,26 @@ const renderloop = () => {
     }
   }
 
-  // camera
-  const direction = new THREE.Vector3();
-  camera.getWorldDirection(direction);
-
-  const side = new THREE.Vector3();
-  side.crossVectors(camera.up, direction).normalize();
-
-  // Movement
-  if (keysPressed.ArrowUp) {
-    camera.position.addScaledVector(direction, speed);
-  }
-  if (keysPressed.ArrowDown) {
-    camera.position.addScaledVector(direction, -speed);
-  }
-  if (keysPressed.ArrowLeft) {
-    camera.position.addScaledVector(side, speed);
-  }
-  if (keysPressed.ArrowRight) {
-    camera.position.addScaledVector(side, -speed);
-  }
-  if (keysPressed.q) {
-    camera.position.y += speed;
-  }
-  if (keysPressed.e) {
-    camera.position.y -= speed;
-  }
-
-  // Rotation
-  if (keysPressed.a) {
-    camera.rotation.y += rotationSpeed;
-  }
-  if (keysPressed.d) {
-    camera.rotation.y -= rotationSpeed;
-  }
-
-  if (currentCameraTarget === "plane" && planeModel) {
-    camera.position.x = planeModel.position.x + 70;
-    camera.position.z = planeModel.position.z + 50;
-    camera.position.y = planeModel.position.y + 1.8;
-    camera.lookAt(
-      new THREE.Vector3(
-        planeModel.position.x,
-        planeModel.position.y,
-        planeModel.position.z
-      )
-    );
-  }
-
-  if (currentCameraTarget === "spongebob" && spongebobModel) {
+  if (currentCameraTarget === "pilot" && pilotModel) {
+    const radius = 70; // Distance from the pilot
+    const horizontalAngle = cursor.x * Math.PI * 2; // Full rotation horizontally
+    const verticalAngle = cursor.y * Math.PI * 0.5; // Limit vertical tilt to 90°
     camera.position.x =
-      spongebobModel.position.x + Math.sin(cursor.x * Math.PI * 2) * 130;
+      pilotModel.position.x +
+      Math.sin(horizontalAngle) * Math.cos(verticalAngle) * radius;
+
     camera.position.z =
-      spongebobModel.position.z + Math.cos(cursor.x * Math.PI * 2) * 130;
-    camera.position.y = spongebobModel.position.y;
+      pilotModel.position.z +
+      Math.cos(horizontalAngle) * Math.cos(verticalAngle) * radius;
+
+    camera.position.y =
+      pilotModel.position.y +
+      Math.sin(verticalAngle) * radius + 20;
     camera.lookAt(
       new THREE.Vector3(
-        spongebobModel.position.x,
-        spongebobModel.position.y,
-        spongebobModel.position.z
+        pilotModel.position.x,
+        pilotModel.position.y,
+        pilotModel.position.z
       )
     );
   }
