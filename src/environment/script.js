@@ -137,6 +137,7 @@ loader.load("/models/PILOT_ARMS.glb", (gltf) => {
   scene.add(pilotArmsModel);
 });
 
+
 loader.load("/models/PILOT_LEGS.glb", (gltf) => {
   pilotLegsModel = gltf.scene;
   pilotLegsModel.scale.setScalar(10);
@@ -262,10 +263,18 @@ window.addEventListener("keydown", (event) => {
           planeModel.position.z
         );
       }
+      if (pilotArmsLegsModel) {
+        pilotArmsLegsModel.position.set(
+          planeModel.position.x,
+          planeModel.position.y - 5,
+          planeModel.position.z
+        );
+      }
       ispilotDropping = true;
       currentCameraTarget = "pilot";
     }
   }
+
 
   if (event.key === "a") {
     // open Arms
@@ -411,6 +420,7 @@ window.addEventListener("mousemove", (event) => {
   cursor.y = -(event.clientY / window.innerHeight - 0.5);
 });
 
+
 // render loop
 const renderloop = () => {
   if (planeModel) {
@@ -453,6 +463,13 @@ const renderloop = () => {
         parachute_2_Model.visible = false;
         parachute_3_Model.visible = false;
         parachute_4_Model.visible = false;
+      }
+      if (pilotModel && pilotLegsModel && planeModel && pilotLegsModel.visible) {
+        pilotModel.visible = true;
+        pilotLegsModel.visible = false;
+      } else if (pilotModel && pilotArmsLegsModel && planeModel && pilotArmsLegsModel.visible) {
+        pilotArmsModel.visible = true;
+        pilotArmsLegsModel.visible = false;
       }
     }
   }
