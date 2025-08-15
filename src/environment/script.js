@@ -36,21 +36,78 @@ let skyboxGeo = new THREE.BoxGeometry(50000, 50000, 50000);
 let skybox = new THREE.Mesh(skyboxGeo, materialArray);
 skybox.position.y = -5000;
 scene.add(skybox);
-pane.addInput(skybox.position, "y", {
-  label: "Skybox Y",
-  min: -10000,
-  max: 10000,
-  step: 1,
+
+let PARAMS = {
+  skydiverMass: 80, // kg
+  dragCoeff: 1.2, // typical for a human + parachute
+  airplaneHeight: 500, // meters
+  groundType: "sand", // sand, water, hard
+  ropeStrength: 500, // Newtons before breaking
+  windNS: "none", // north, south, none
+  windEW: "none", // east, west, none
+  yawDamping: 0.5, // arbitrary damping factor
+  armLength: 0.8, // meters
+};
+
+// Skydiver mass
+pane.addInput(PARAMS, "skydiverMass", { min: 40, max: 120, step: 1 });
+
+// Drag coefficient
+pane.addInput(PARAMS, "dragCoeff", { min: 0.5, max: 2.5, step: 0.01 });
+
+// Airplane height
+pane.addInput(PARAMS, "airplaneHeight", { min: 10000, max: 45000, step: 100 });
+
+// Ground type
+pane.addInput(PARAMS, "groundType", {
+  options: {
+    Sand: "sand",
+    Water: "water",
+    "Hard Ground": "hard",
+  },
 });
+
+// Rope tensile strength
+pane.addInput(PARAMS, "ropeStrength", { min: 100, max: 2000, step: 10 });
+
+// Wind - North/South
+pane.addInput(PARAMS, "windNS", {
+  options: {
+    None: "none",
+    North: "north",
+    South: "south",
+  },
+});
+
+// Wind - East/West
+pane.addInput(PARAMS, "windEW", {
+  options: {
+    None: "none",
+    East: "east",
+    West: "west",
+  },
+});
+
+// Yaw damping coefficient
+pane.addInput(PARAMS, "yawDamping", { min: 0.1, max: 2.0, step: 0.01 });
+
+// Arm length
+pane.addInput(PARAMS, "armLength", { min: 0.3, max: 1.5, step: 0.01 });
 
 // add something
 let planeModel = null;
 let pilotModel = null;
-let parachuteModel = null;
+let pilotArmsModel = null;
+let pilotLegsModel = null;
+let pilotArmsLegsModel = null;
+let parachute_1_Model = null;
+let parachute_2_Model = null;
+let parachute_3_Model = null;
+let parachute_4_Model = null;
 
 let ispilotDropping = false;
 let pilotHasParachute = false;
-let hKeyPressed = false;
+let reachedGround = false;
 
 let currentCameraTarget = "pilot";
 
@@ -60,117 +117,9 @@ const loader = new GLTFLoader();
 loader.load("/models/helicopter.glb", (gltf) => {
   planeModel = gltf.scene;
   planeModel.scale.setScalar(0.4);
-  planeModel.position.set(0, 0, 0);
+  planeModel.position.set(0, -30000 + PARAMS["airplaneHeight"], 0);
   scene.add(planeModel);
 });
-
-let bones = [];
-
-const leftArmBones = [
-  "c_shoulderl",
-  "arm_ikl",
-  "arm_fkl",
-  "arml",
-  "arm_twistl",
-  "c_arm_ikl",
-  "c_arm_twist_offsetl",
-  "forearm_ikl",
-  "forearm_fkl",
-  "forearm_twistl",
-  "forearml",
-  "handl",
-  "c_hand_fkl",
-  "c_hand_fk_scale_fixl",
-  "arm_fk_pre_polel",
-  "c_index1_basel",
-  "index1l",
-  "index2l",
-  "index3l",
-  "c_thumb1_basel",
-  "thumb1l",
-  "thumb2l",
-  "thumb3l",
-];
-
-const rightArmBones = [
-  // "c_shoulderr",
-  "arm_ikr",
-  "arm_fkr",
-  "armr",
-  "arm_twistr",
-  "c_arm_ikr",
-  "c_arm_twist_offsetr",
-  "forearm_ikr",
-  "forearm_fkr",
-  "forearm_twistr",
-  "forearmr",
-  "handr",
-  "c_hand_fkr",
-  "c_hand_fk_scale_fixr",
-  "arm_fk_pre_poler",
-  // "c_index1_baser",
-  // "index1r",
-  // "index2r",
-  // "index3r",
-  // "c_thumb1_baser",
-  // "thumb1r",
-  // "thumb2r",
-  // "thumb3r",
-];
-
-const leftLegBones = [
-  "c_thigh_bl",
-  "c_thigh_fkl",
-  "thighl",
-  "thigh_twistl",
-  "thigh_ik_nostrl",
-  "c_thigh_ikl",
-  "c_stretch_legl",
-  "thigh_stretchl",
-  "legl",
-  "leg_ikl",
-  "leg_fkl",
-  "c_leg_fkl",
-  "leg_twistl",
-  "leg_stretchl",
-  "footl",
-  "foot_fkl",
-  "c_foot_fkl",
-  "c_foot_fk_scale_fixl",
-  "foot_01_polel",
-  "foot_ik_targetl",
-  "toes_01l",
-  "c_toes_fkl",
-  "c_toes_ikl",
-  "c_toes_end_01l",
-];
-
-const rightLegBones = [
-  "c_thigh_br",
-  "c_thigh_fkr",
-  "thighr",
-  "thigh_twistr",
-  "thigh_ik_nostrr",
-  "c_thigh_ikr",
-  "c_stretch_legr",
-  "thigh_stretchr",
-  "legr",
-  "leg_ikr",
-  "leg_fkr",
-  "c_leg_fkr",
-  "leg_twistr",
-  "leg_stretchr",
-  "footr",
-  "foot_fkr",
-  "c_foot_fkr",
-  "c_foot_fk_scale_fixr",
-  "foot_01_poler",
-  "foot_ik_targetr",
-  "toes_01r",
-  "c_toes_fkr",
-  "c_toes_ikr",
-  "c_toes_end_01r",
-];
 
 loader.load("/models/PILOT.glb", (gltf) => {
   pilotModel = gltf.scene;
@@ -178,57 +127,34 @@ loader.load("/models/PILOT.glb", (gltf) => {
   pilotModel.position.set(0, 0, 0);
   pilotModel.visible = false; // Hide initially
   scene.add(pilotModel);
-
-  // const skeletonHelper = new THREE.SkeletonHelper(pilotModel);
-  // scene.add(skeletonHelper);
-
-  // Find all bones
-  pilotModel.traverse((child) => {
-    if (child.isBone) {
-      bones.push(child);
-      console.log(
-        "Bone:",
-        child.name,
-        "Children:",
-        child.children.map((c) => c.name),
-        "Position:",
-        child.position,
-        "Rotation:",
-        child.rotation
-      );
-    }
-
-    if (child.isSkinnedMesh) {
-      console.log("Skinned mesh found: - script.js:202", child);
-      console.log(
-        "Bones influencing this mesh:",
-        child.skeleton.bones.map((b) => b.name)
-      );
-    }
-  });
-
-  // pilotModel.traverse((child) => {
-  //   if (child.isBone) {
-  //     bones[child.name] = child;
-
-  // Optional: add colored sphere to visualize bones
-  // const sphere = new THREE.Mesh(
-  //   new THREE.SphereGeometry(0.3),
-  //   new THREE.MeshBasicMaterial({ color: Math.random() * 0xffffff })
-  // );
-  // child.add(sphere);
-  //   }
-  // });
-
-  // console.log("All bones: - script.js:117", Object.keys(bones));
 });
-// const leftUpperArm = bones["forearm_ikl"];
-// const rightUpperArm = bones["forearm_fkl"];
-// const leftUpperLeg = bones["forearm_twistl"];
-// const rightUpperLeg = bones["forearm_twistl"];
+
+loader.load("/models/PILOT_ARMS.glb", (gltf) => {
+  pilotArmsModel = gltf.scene;
+  pilotArmsModel.scale.setScalar(10);
+  pilotArmsModel.position.set(0, 0, 0);
+  pilotArmsModel.visible = false; // Hide initially
+  scene.add(pilotArmsModel);
+});
+
+loader.load("/models/PILOT_LEGS.glb", (gltf) => {
+  pilotLegsModel = gltf.scene;
+  pilotLegsModel.scale.setScalar(10);
+  pilotLegsModel.position.set(0, 0, 0);
+  pilotLegsModel.visible = false; // Hide initially
+  scene.add(pilotLegsModel);
+});
+
+loader.load("/models/PILOT_ARMS_LEGS.glb", (gltf) => {
+  pilotArmsLegsModel = gltf.scene;
+  pilotArmsLegsModel.scale.setScalar(10);
+  pilotArmsLegsModel.position.set(0, 0, 0);
+  pilotArmsLegsModel.visible = false; // Hide initially
+  scene.add(pilotArmsLegsModel);
+});
 
 // draw parachute
-function createParachute() {
+function createParachute(x_val, y_val) {
   const object = new THREE.Group();
 
   const canopyMaterial = new THREE.MeshBasicMaterial({ map: parachuteTexture });
@@ -262,7 +188,7 @@ function createParachute() {
   const line1 = new THREE.Line(
     new THREE.BufferGeometry().setFromPoints([
       new THREE.Vector3(-1.5, 0, 0),
-      new THREE.Vector3(-0.4, -2.1, 0),
+      new THREE.Vector3(-x_val, -y_val, 0),
     ]),
     lineMat
   );
@@ -270,7 +196,7 @@ function createParachute() {
   const line2 = new THREE.Line(
     new THREE.BufferGeometry().setFromPoints([
       new THREE.Vector3(1.5, 0, 0),
-      new THREE.Vector3(0.4, -2.1, 0),
+      new THREE.Vector3(x_val, -y_val, 0),
     ]),
     lineMat
   );
@@ -322,101 +248,158 @@ window.addEventListener("keydown", (event) => {
         planeModel.position.y - 5,
         planeModel.position.z
       );
+      if (pilotArmsModel) {
+        pilotArmsModel.position.set(
+          planeModel.position.x,
+          planeModel.position.y - 5,
+          planeModel.position.z
+        );
+      }
+      if (pilotLegsModel) {
+        pilotLegsModel.position.set(
+          planeModel.position.x,
+          planeModel.position.y - 5,
+          planeModel.position.z
+        );
+      }
       ispilotDropping = true;
       currentCameraTarget = "pilot";
     }
   }
 
-  // if (event.key === "q" && pilotModel) {
-  // const leftArm = pilotModel.getObjectByName("c_arms_polel");
-  // const rightArm = pilotModel.getObjectByName("c_arms_poler");
-  // const leftLeg = pilotModel.getObjectByName("c_leg_polel");
-  // const rightLeg = pilotModel.getObjectByName("c_leg_poler");
-
-  // console.log(leftArm, rightArm, leftLeg, rightLeg);
-  // pilotModel.traverse((child) => {
-  //   if (child.isSkinnedMesh) {
-  //     console.log("Skinned mesh found: - script.js:187", child);
-  //   }
-  // });
-  // if (leftArm) {
-  //   leftArm.rotation.set(5, 5, 5); // Extreme rotation
-  //   leftArm.scale.set(2, 2, 2); // Make it double size
-  //   leftArm.position.y += 5; // Move it up
-  // }
-  // // if (leftArm) leftArm.rotation.x = Math.PI;
-  // if (rightArm) rightArm.rotation.x = -Math.PI;
-  // if (leftLeg) leftLeg.rotation.z = Math.PI;
-  // if (rightLeg) rightLeg.rotation.z = Math.PI;
-
-  // // Update the skeleton matrices
-  // pilotModel.traverse((child) => {
-  //   if (child.isSkinnedMesh) {
-  //     child.skeleton.update();
-  //   }
-  // });
-  // pilotModel.updateMatrixWorld(true);
-
-  if (event.key === "q" && ispilotDropping) {
-    bones.forEach((bone) => {
-      if (rightArmBones.includes(bone.name)) {
-        console.log(bone);
-        // bone.rotation.x += 0.2; // huge rotation
-        // console.log(bone.rotation.x);
-        bone.rotation.y += Math.PI / 2;
-        // bone.rotation.z += 0.2;
-        // bone.position.x++;
-        // bone.scale.set(bone.scale.x + 0.2, bone.scale.y + 0.2, bone.scale.z + 0.2); // big scale change
-      }
-      // bone.position.y += 5; // big position change
-    });
-
-    // Update skeletons for all skinned meshes
-    pilotModel.traverse((child) => {
-      if (child.isSkinnedMesh) {
-        child.skeleton.update();
-      }
-    });
-
-    console.log("Bones transformed! - script.js:381");
-  }
-
-  if (event.key === "o") {
-    dropSpeed = 5;
-    if (pilotModel && !pilotHasParachute && ispilotDropping) {
-      const parachute = createParachute();
-      parachute.position.set(0, 3.2, 0);
-      parachute.scale.setScalar(1.1);
-
-      pilotModel.add(parachute);
-      pilotHasParachute = true;
-      parachuteModel = parachute;
+  if (event.key === "a") {
+    // open Arms
+    if (
+      pilotModel &&
+      pilotArmsModel &&
+      planeModel &&
+      ispilotDropping &&
+      pilotModel.visible
+    ) {
+      pilotModel.visible = false;
+      pilotArmsModel.visible = true;
+    } else if (
+      pilotLegsModel &&
+      pilotArmsLegsModel &&
+      planeModel &&
+      ispilotDropping &&
+      pilotLegsModel.visible
+    ) {
+      pilotLegsModel.visible = false;
+      pilotArmsLegsModel.visible = true;
     }
   }
 
-  //////////////////////////////////////////////
-  // const step = 2; // rotation step
-  // switch (event.key) {
-  //   case "q": // left arm up
-  //     if (leftUpperArm) leftUpperArm.scale.setScalar += step;
-  //     break;
-  //   case "w": // right arm up
-  //     if (rightUpperArm) rightUpperArm.rotation.x += step;
-  //     break;
-  //   case "a": // left leg forward
-  //     if (leftUpperLeg) leftUpperLeg.rotation.x += step;
-  //     break;
-  //   case "s": // right leg forward
-  //     if (rightUpperLeg) rightUpperLeg.rotation.x += step;
-  //     break;
-  // }
+  if (event.key === "c") {
+    // close Arms
+    if (
+      pilotModel &&
+      pilotArmsModel &&
+      planeModel &&
+      ispilotDropping &&
+      pilotArmsModel.visible
+    ) {
+      pilotModel.visible = true;
+      pilotArmsModel.visible = false;
+    } else if (
+      pilotLegsModel &&
+      pilotArmsLegsModel &&
+      planeModel &&
+      ispilotDropping &&
+      pilotArmsLegsModel.visible
+    ) {
+      pilotLegsModel.visible = true;
+      pilotArmsLegsModel.visible = false;
+    }
+  }
 
-  // // Update skeletons
-  // pilotModel.traverse((child) => {
-  //   if (child.isSkinnedMesh) child.skeleton.update();
-  // });
+  if (event.key === "l" && ispilotDropping) {
+    // open legs
+    if (
+      pilotModel &&
+      pilotLegsModel &&
+      planeModel &&
+      ispilotDropping &&
+      pilotModel.visible
+    ) {
+      pilotModel.visible = false;
+      pilotLegsModel.visible = true;
+    } else if (
+      pilotModel &&
+      pilotArmsLegsModel &&
+      planeModel &&
+      ispilotDropping &&
+      pilotArmsModel.visible
+    ) {
+      pilotArmsModel.visible = false;
+      pilotArmsLegsModel.visible = true;
+    }
+  }
 
-  //////////////////////////////////////////////
+  if (event.key === "x") {
+    // close Legs
+    if (
+      pilotModel &&
+      pilotLegsModel &&
+      planeModel &&
+      ispilotDropping &&
+      pilotLegsModel.visible
+    ) {
+      pilotModel.visible = true;
+      pilotLegsModel.visible = false;
+    } else if (
+      pilotModel &&
+      pilotArmsLegsModel &&
+      planeModel &&
+      ispilotDropping &&
+      pilotArmsLegsModel.visible
+    ) {
+      pilotArmsModel.visible = true;
+      pilotArmsLegsModel.visible = false;
+    }
+  }
+
+  if (event.key === "o") {
+    dropSpeed = 10;
+    if (pilotModel && !pilotHasParachute && ispilotDropping) {
+      const parachute_1 = createParachute(0.4, 2.1);
+      parachute_1.position.set(0, 3.2, 0);
+      parachute_1.scale.setScalar(1.1);
+      pilotModel.add(parachute_1);
+
+      const parachute_3 = createParachute(0.4, 2.1);
+      parachute_3.position.set(0, 3.2, 0);
+      parachute_3.scale.setScalar(1.1);
+      pilotLegsModel.add(parachute_3);
+
+      const parachute_2 = createParachute(0.8, 2.1);
+      parachute_2.position.set(0, 3.9, 0);
+      parachute_2.scale.setScalar(1.1);
+      pilotArmsModel.add(parachute_2);
+
+      const parachute_4 = createParachute(0.8, 2.1);
+      parachute_4.position.set(0, 3.4, 0);
+      parachute_4.scale.setScalar(1.1);
+      pilotArmsLegsModel.add(parachute_4);
+
+      pilotHasParachute = true;
+      parachute_1_Model = parachute_1;
+      parachute_2_Model = parachute_2;
+      parachute_3_Model = parachute_3;
+      parachute_4_Model = parachute_4;
+    }
+  }
+
+  if (event.key === "h") {
+    dropSpeed = 50;
+    if (pilotModel && pilotHasParachute && ispilotDropping) {
+      pilotHasParachute = false;
+      parachute_1_Model.visible = false;
+      parachute_2_Model.visible = false;
+      parachute_3_Model.visible = false;
+      parachute_4_Model.visible = false;
+    }
+  }
 });
 
 const cursor = {
@@ -430,13 +413,46 @@ window.addEventListener("mousemove", (event) => {
 
 // render loop
 const renderloop = () => {
+  if (planeModel) {
+    planeModel.position.set(0, -30000 + PARAMS["airplaneHeight"], 0);
+  }
+  if (planeModel && pilotModel && !ispilotDropping && !reachedGround) {
+    pilotModel.position.set(
+      planeModel.position.x,
+      planeModel.position.y - 5,
+      planeModel.position.z
+    );
+  }
+    
   if (ispilotDropping && pilotModel) {
     pilotModel.position.y = Math.max(pilotModel.position.y - dropSpeed, -29999); // Drop speed
+    pilotArmsModel.position.y = Math.max(
+      pilotArmsModel.position.y - dropSpeed,
+      -29999
+    ); // Drop speed
+    pilotLegsModel.position.y = Math.max(
+      pilotLegsModel.position.y - dropSpeed,
+      -29999
+    ); // Drop speed
+    pilotArmsLegsModel.position.y = Math.max(
+      pilotArmsLegsModel.position.y - dropSpeed,
+      -29999
+    ); // Drop speed
+
     if (pilotModel.position.y <= -29999) {
       ispilotDropping = false;
+      reachedGround = true;
       // Hide the parachute if it exists
-      if (parachuteModel) {
-        parachuteModel.visible = false;
+      if (
+        parachute_1_Model ||
+        parachute_2_Model ||
+        parachute_3_Model ||
+        parachute_4_Model
+      ) {
+        parachute_1_Model.visible = false;
+        parachute_2_Model.visible = false;
+        parachute_3_Model.visible = false;
+        parachute_4_Model.visible = false;
       }
     }
   }
