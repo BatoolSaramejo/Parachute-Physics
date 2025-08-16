@@ -1893,8 +1893,7 @@ const renderloop = () => {
       )
     );
   } else if (currentCameraTarget === "helicopter" && planeModel) {
-    // 🆕 جعل الكاميرا تدور حول الهليكوبتر قبل السقوط
-    cameraAngle += 0.005; // سرعة الدوران
+    cameraAngle += 0.002; // سرعة الدوران
     camera.position.x = planeModel.position.x + Math.sin(cameraAngle) * cameraRadius;
     camera.position.y = planeModel.position.y + 20; // ارتفاع الكاميرا
     camera.position.z = planeModel.position.z + Math.cos(cameraAngle) * cameraRadius;
