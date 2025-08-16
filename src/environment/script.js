@@ -41,7 +41,7 @@ let PARAMS = {
   skydiverMass: 80, // kg
   dragCoeff: 1.2, // typical for a human + parachute
   airplaneHeight: 500, // meters
-  groundType: "sand", // sand, water, hard
+  groundType: "hard", // sand, water, hard
   ropeStrength: 500, // Newtons before breaking
   windNS: "none", // north, south, none
   windEW: "none", // east, west, none
@@ -108,6 +108,9 @@ let parachute_4_Model = null;
 let ispilotDropping = false;
 let pilotHasParachute = false;
 let reachedGround = false;
+let landingBox = null;
+let currentLandingBoxType = "hard";
+let groundLevel = -30000;
 
 let currentCameraTarget = "pilot";
 
@@ -117,7 +120,7 @@ const loader = new GLTFLoader();
 loader.load("/models/helicopter.glb", (gltf) => {
   planeModel = gltf.scene;
   planeModel.scale.setScalar(0.4);
-  planeModel.position.set(0, -30000 + PARAMS["airplaneHeight"], 0);
+  planeModel.position.set(0, groundLevel + PARAMS["airplaneHeight"], 0);
   scene.add(planeModel);
 });
 
@@ -136,7 +139,6 @@ loader.load("/models/PILOT_ARMS.glb", (gltf) => {
   pilotArmsModel.visible = false; // Hide initially
   scene.add(pilotArmsModel);
 });
-
 
 loader.load("/models/PILOT_LEGS.glb", (gltf) => {
   pilotLegsModel = gltf.scene;
@@ -207,6 +209,110 @@ function createParachute(x_val, y_val) {
   return object;
 }
 
+// draw landing box
+function createLandingBox(filler_type) {
+  const boxGroup = new THREE.Group();
+  const boxMaterial = new THREE.MeshStandardMaterial({ color: 0x8b4513 });
+
+  // ground
+  const boxGroundGeometry = new THREE.BoxGeometry(5, 0.25, 5);
+  const uv2boxGroundGeometry = new THREE.BufferAttribute(boxGroundGeometry.attributes.uv.array, 2);
+  boxGroundGeometry.setAttribute('uv2', uv2boxGroundGeometry);
+
+  const boxGroundMesh = new THREE.Mesh(boxGroundGeometry, boxMaterial);
+
+  // left
+  const boxLeftSideGeometry = new THREE.BoxGeometry(0.25, 1, 5);
+  const uv2boxLeftSideGeometry = new THREE.BufferAttribute(boxLeftSideGeometry.attributes.uv.array, 2);
+  boxLeftSideGeometry.setAttribute('uv2', uv2boxLeftSideGeometry);
+
+  const boxLeftSideMesh = new THREE.Mesh(boxLeftSideGeometry, boxMaterial);
+  boxLeftSideMesh.position.y += 0.5;
+  boxLeftSideMesh.position.x -= 2.375;
+
+  // right
+  const boxRightSideGeometry = new THREE.BoxGeometry(0.25, 1, 5);
+  const uv2boxRightSideGeometry = new THREE.BufferAttribute(boxRightSideGeometry.attributes.uv.array, 2);
+  boxRightSideGeometry.setAttribute('uv2', uv2boxRightSideGeometry);
+
+  const boxRightSideMesh = new THREE.Mesh(boxRightSideGeometry, boxMaterial);
+  boxRightSideMesh.position.y += 0.5;
+  boxRightSideMesh.position.x += 2.375;
+
+  // front
+  const boxFrontSideGeometry = new THREE.BoxGeometry(4.5, 1, 0.25);
+  const uv2boxFrontSideGeometry = new THREE.BufferAttribute(boxFrontSideGeometry.attributes.uv.array, 2);
+  boxFrontSideGeometry.setAttribute('uv2', uv2boxFrontSideGeometry);
+
+  const boxFrontSideMesh = new THREE.Mesh(boxFrontSideGeometry, boxMaterial);
+  boxFrontSideMesh.position.y += 0.5;
+  boxFrontSideMesh.position.z += 2.375;
+
+  // back
+  const boxBackSideGeometry = new THREE.BoxGeometry(4.5, 1, 0.25);
+  const uv2boxBackSideGeometry = new THREE.BufferAttribute(boxBackSideGeometry.attributes.uv.array, 2);
+  boxBackSideGeometry.setAttribute('uv2', uv2boxBackSideGeometry);
+
+  const boxBackSideMesh = new THREE.Mesh(boxBackSideGeometry, boxMaterial);
+  boxBackSideMesh.position.y += 0.5;
+  boxBackSideMesh.position.z -= 2.375;
+
+  // filler
+  const fillerGeometry = new THREE.BoxGeometry(4.5, 0.5, 4.5);
+  const uv2fillerGeometry = new THREE.BufferAttribute(fillerGeometry.attributes.uv.array, 2);
+  fillerGeometry.setAttribute('uv2', uv2fillerGeometry);
+
+  let fillerMaterial = null;
+  if (filler_type === "water") {
+    fillerMaterial = new THREE.MeshStandardMaterial({ color: 0x1e90ff, transparent: true, opacity: 0.7 });
+  } else if (filler_type === "sand") {
+    fillerMaterial = new THREE.MeshStandardMaterial({ color: 0xd2b48c });
+  } else if (filler_type === "hard") {
+    fillerMaterial = new THREE.MeshStandardMaterial({ color: 0x555555 });
+  } else return null;
+
+  const fillerMesh = new THREE.Mesh(fillerGeometry, fillerMaterial);
+  fillerMesh.position.set(0, 0.5, 0);
+
+  boxGroup.add(boxGroundMesh, boxLeftSideMesh, boxRightSideMesh, boxFrontSideMesh, boxBackSideMesh, fillerMesh);
+  return boxGroup;
+}
+
+// function to update landing box
+function updateLandingBox() {
+  if (PARAMS.groundType === "hard" || PARAMS.groundType === "sand") {
+    groundLevel = -29985;
+  } else if (PARAMS.groundType === "water") {
+    groundLevel = -29995;
+  }
+
+  if (landingBox && pilotModel) {
+    landingBox.position.set(pilotModel.position.x, -30000, pilotModel.position.z);
+  }
+  // remove old one
+  if (landingBox && currentLandingBoxType != PARAMS.groundType) {
+    scene.remove(landingBox);
+    landingBox.traverse((child) => {
+      if (child.isMesh) {
+        child.geometry.dispose();
+        child.material.dispose();
+      }
+    });
+    landingBox = null;
+  } else if (!landingBox) {
+    // create new one
+    landingBox = createLandingBox(PARAMS.groundType);
+    currentLandingBoxType = PARAMS.groundType;
+    if (landingBox) {
+      landingBox.position.set(0, -30000, 0); // set where the pilot lands
+      landingBox.scale.setScalar(20, 20, 20);
+      scene.add(landingBox);
+    }
+  } else return;
+}
+
+updateLandingBox();
+
 // add light
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
 scene.add(ambientLight);
@@ -274,7 +380,6 @@ window.addEventListener("keydown", (event) => {
       currentCameraTarget = "pilot";
     }
   }
-
 
   if (event.key === "a") {
     // open Arms
@@ -415,16 +520,38 @@ const cursor = {
   x: 0,
   y: 0,
 };
-window.addEventListener("mousemove", (event) => {
-  cursor.x = event.clientX / window.innerWidth - 0.5;
-  cursor.y = -(event.clientY / window.innerHeight - 0.5);
+let isCameraActive = false;
+
+// Activate on click
+canvas.addEventListener("mousedown", () => {
+  isCameraActive = true;
 });
 
+// Deactivate on mouse up
+canvas.addEventListener("mouseup", () => {
+  isCameraActive = false;
+});
+
+// Update cursor only when camera is active
+canvas.addEventListener("mousemove", (event) => {
+  if (!isCameraActive) return;
+
+  const rect = canvas.getBoundingClientRect();
+  cursor.x = (event.clientX - rect.left) / rect.width - 0.5;
+  cursor.y = -((event.clientY - rect.top) / rect.height - 0.5);
+});
+
+window.addEventListener("wheel", (event) => {
+  // Zoom in = decrease FOV, Zoom out = increase FOV
+  camera.fov += event.deltaY * 0.05; 
+  camera.fov = THREE.MathUtils.clamp(camera.fov, 20, 100); // keep it in a range
+  camera.updateProjectionMatrix();
+});
 
 // render loop
 const renderloop = () => {
   if (planeModel) {
-    planeModel.position.set(0, -30000 + PARAMS["airplaneHeight"], 0);
+    planeModel.position.set(0, groundLevel + PARAMS["airplaneHeight"], 0);
   }
   if (planeModel && pilotModel && !ispilotDropping && !reachedGround) {
     pilotModel.position.set(
@@ -433,23 +560,23 @@ const renderloop = () => {
       planeModel.position.z
     );
   }
-    
+
   if (ispilotDropping && pilotModel) {
-    pilotModel.position.y = Math.max(pilotModel.position.y - dropSpeed, -29999); // Drop speed
+    pilotModel.position.y = Math.max(pilotModel.position.y - dropSpeed, groundLevel + 1); // Drop speed
     pilotArmsModel.position.y = Math.max(
       pilotArmsModel.position.y - dropSpeed,
-      -29999
+      groundLevel + 1
     ); // Drop speed
     pilotLegsModel.position.y = Math.max(
       pilotLegsModel.position.y - dropSpeed,
-      -29999
+      groundLevel + 1
     ); // Drop speed
     pilotArmsLegsModel.position.y = Math.max(
       pilotArmsLegsModel.position.y - dropSpeed,
-      -29999
+      groundLevel + 1
     ); // Drop speed
 
-    if (pilotModel.position.y <= -29999) {
+    if (pilotModel.position.y <= groundLevel + 1) {
       ispilotDropping = false;
       reachedGround = true;
       // Hide the parachute if it exists
@@ -464,12 +591,26 @@ const renderloop = () => {
         parachute_3_Model.visible = false;
         parachute_4_Model.visible = false;
       }
-      if (pilotModel && pilotLegsModel && planeModel && pilotLegsModel.visible) {
+      if (
+        pilotModel &&
+        pilotLegsModel &&
+        planeModel &&
+        pilotLegsModel.visible
+      ) {
         pilotModel.visible = true;
         pilotLegsModel.visible = false;
-      } else if (pilotModel && pilotArmsLegsModel && planeModel && pilotArmsLegsModel.visible) {
+      } else if (
+        pilotModel &&
+        pilotArmsLegsModel &&
+        planeModel &&
+        pilotArmsLegsModel.visible
+      ) {
         pilotArmsModel.visible = true;
         pilotArmsLegsModel.visible = false;
+      }
+
+      if (camera.position.y < groundLevel + 10) {
+        camera.position.y = groundLevel + 10;
       }
     }
   }
@@ -488,14 +629,31 @@ const renderloop = () => {
 
     camera.position.y =
       pilotModel.position.y + Math.sin(verticalAngle) * radius + 20;
+
+    if (reachedGround) {
+      // const groundLevel = pilotModel.position.y + 20; // keep camera above ground
+      if (camera.position.y < groundLevel + 10) {
+        camera.position.y = groundLevel + 10;
+      }
+    }
+    const lookAtOffset = 10; // adjust until it feels natural
     camera.lookAt(
       new THREE.Vector3(
         pilotModel.position.x,
-        pilotModel.position.y,
+        pilotModel.position.y + lookAtOffset,
         pilotModel.position.z
       )
     );
   }
+
+  if (reachedGround) {
+    pilotModel.position.y = groundLevel + 1;
+    pilotArmsModel.position.y = groundLevel + 1;
+    pilotLegsModel.position.y = groundLevel + 1;
+    pilotArmsLegsModel.position.y = groundLevel + 1;
+  }
+
+  updateLandingBox();
 
   // controls.update();
   renderer.render(scene, camera);
