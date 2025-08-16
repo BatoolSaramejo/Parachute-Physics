@@ -1333,6 +1333,8 @@ let PARAMS = {
   ropeStrength: 500, // Newtons before breaking
   windX: 0, // 🆕 جديد: قوة الرياح على محور X
   windZ: 0, // 🆕 جديد: قوة الرياح على محور Z
+  tensionLeft: 0, // 🆕 جديد: شد الحبل الأيسر
+  tensionRight: 0, // 🆕 جديد: شد الحبل الأيمن
   yawDamping: 0.5, // arbitrary damping factor
   armLength: 0.8, // meters
 };
@@ -1358,7 +1360,7 @@ pane.addInput(PARAMS, "groundType", {
 // Rope tensile strength
 pane.addInput(PARAMS, "ropeStrength", { min: 100, max: 2000, step: 10 });
 
-// 🆕 تعديل: تحكم مباشر بقوة الرياح على المحورين X و Z
+//  تعديل: تحكم مباشر بقوة الرياح على المحورين X و Z
 // Wind on X-axis (East/West)
 pane.addInput(PARAMS, "windX", { min: -80, max: 80, step: 1, label: 'Wind X (E/W)' });
 
@@ -1366,13 +1368,19 @@ pane.addInput(PARAMS, "windX", { min: -80, max: 80, step: 1, label: 'Wind X (E/W
 pane.addInput(PARAMS, "windZ", { min: -80, max: 80, step: 1, label: 'Wind Z (N/S)' });
 
 
+//تحكم بشد الحبل الأيسر
+pane.addInput(PARAMS, "tensionLeft", { min: 0, max: 200, step: 1, label: 'Tension Left' });
+
+//  تحكم بشد الحبل الأيمن
+pane.addInput(PARAMS, "tensionRight", { min: 0, max: 200, step: 1, label: 'Tension Right' });
+
 // Yaw damping coefficient
 pane.addInput(PARAMS, "yawDamping", { min: 0.1, max: 2.0, step: 0.01 });
 
 // Arm length
 pane.addInput(PARAMS, "armLength", { min: 0.3, max: 1.5, step: 0.01 });
 
-// 🆕 الكود الجديد لربط Tweakpane مع الرياح
+//  الكود الجديد لربط Tweakpane مع الرياح وشد الحبال
 pane.on('change', (ev) => {
   if (!window.parachute) return;
 
@@ -1387,8 +1395,26 @@ pane.on('change', (ev) => {
     window.parachute.wind.z = ev.value;
     console.log(`💨 قوة الرياح على محور Z: ${ev.value} نيوتن`);
   }
-});
 
+
+  // 🆕 جديد: تحديث شد الحبل الأيسر
+  if (ev.presetKey === 'tensionLeft') {
+    window.parachute.tensionLeft = ev.value;
+    console.log(`⬅️ شد الحبل الأيسر: ${ev.value} نيوتن`);
+  }
+
+  // 🆕 جديد: تحديث شد الحبل الأيمن
+  if (ev.presetKey === 'tensionRight') {
+    window.parachute.tensionRight = ev.value;
+    console.log(`➡️ شد الحبل الأيمن: ${ev.value} نيوتن`);
+  }
+
+  // 🆕 جديد: تحديث نوع الأرض
+  if (ev.presetKey === 'groundType') {
+    window.parachute.surfaceType = ev.value;
+    console.log(`🌍 تم تحديث نوع الأرض إلى: ${ev.value}`);
+  }
+});
 
 // add something
 let planeModel = null;
@@ -1852,10 +1878,13 @@ const renderloop = () => {
     const physicsHeight = window.parachute.position.y;
     const mappedHeight = physicsHeight + groundLevel;
 
-    pilotModel.position.y = mappedHeight;
-    pilotModel.position.x = window.parachute.position.x;
-    pilotModel.position.z = window.parachute.position.z;
-    pilotModel.rotation.y = window.parachute.yawAngle;
+ 
+    pilotModel.position.y = mappedHeight;
+    pilotModel.position.x = window.parachute.position.x;
+    pilotModel.position.z = window.parachute.position.z;
+
+    //  تحديث زاوية الدوران 
+    pilotModel.rotation.y = window.parachute.yawAngle * Math.PI / 180;
 
     if (pilotArmsModel) pilotArmsModel.position.copy(pilotModel.position);
     if (pilotLegsModel) pilotLegsModel.position.copy(pilotModel.position);

@@ -55,23 +55,6 @@ export class Parachute {
   gravityForce() {
     return new Vector3(0, -this.mass * this.gravity, 0);
   }
-
-  // dragForce() {
-  //   const relativeVelocity = this.velocity;
-  //   const speed = relativeVelocity.magnitude();
-  //   const baseArea = this.isParachuteOpen ? this.openArea : this.closedArea;
-  //   const area = baseArea * this.bodyPostureFactor * this.legPostureFactor; // إضافة legPostureFactor
-  //   const rho = this.dynamicAirDensity(); 
-  //   const dragMagnitude = 0.5 * rho * this.dragCoeff * area * speed * speed;
-
-  //   const dragDirection = speed === 0
-  //     ? new Vector3()
-  //     : relativeVelocity.normalize().negate();
-
-  //   return dragDirection.scale(dragMagnitude);
-  // }
-// في ملف Parachute.js
-
 dragForce() {
     // حساب السرعة النسبية (سرعة المظلي - سرعة الرياح)
     const relativeVelocity = this.velocity.subtract(this.wind);
