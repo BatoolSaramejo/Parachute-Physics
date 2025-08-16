@@ -241,7 +241,7 @@ let dropSpeed = 50;
 // add keyboard listener
 
 window.addEventListener("keydown", (event) => {
-  if (event.key === "Enter") {
+  if (event.key === "s") {
     if (pilotModel && planeModel && !ispilotDropping) {
       pilotModel.visible = true;
       pilotModel.position.set(

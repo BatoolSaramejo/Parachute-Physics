@@ -3,7 +3,7 @@ import { Parachute } from "./physics/models/Parachute.js";
 import { Simulator } from "./physics/simulator/Simulator.js";
 import { Vector3 } from "./physics/models/Vector3.js";
 
-let isSimulationRunning = false; // ⚠️ خلي الوضع الافتراضي متوقف
+let isSimulationRunning = false; //  خلي الوضع الافتراضي متوقف
 
 const parachute = new Parachute({
   mass: 90,
