@@ -1340,13 +1340,19 @@ let PARAMS = {
 };
 
 // Skydiver mass
-pane.addInput(PARAMS, "skydiverMass", { min: 40, max: 120, step: 1 });
+// pane.addInput(PARAMS, "skydiverMass", { min: 40, max: 120, step: 1 });
+// Skydiver mass
+pane.addInput(PARAMS, "skydiverMass", { min: 80, max: 2000, step: 1 })
+    .on("change", (ev) => {
+        parachute.mass = ev.value; // 🆕 ربط الكتلة بالفيزياء
+        console.log(`⚖️ تم تغيير الكتلة إلى ${parachute.mass} كغ`);
+    });
 
 // Drag coefficient
 pane.addInput(PARAMS, "dragCoeff", { min: 0.5, max: 2.5, step: 0.01 });
 
 // Airplane height
-pane.addInput(PARAMS, "airplaneHeight", { min: 1500, max: 5000, step: 100 });
+pane.addInput(PARAMS, "airplaneHeight", { min: 3000, max: 8000, step: 100 });
 
 // Ground type
 pane.addInput(PARAMS, "groundType", {
