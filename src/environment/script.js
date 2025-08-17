@@ -442,97 +442,32 @@ const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
+// دالة لإنشاء وتنسيق لوحة المعلومات
+function createInfoPanel(text, topPosition) {
+    const div = document.createElement("div");
+    div.style.position = "absolute";
+    div.style.top = `${topPosition}px`;
+    div.style.left = "20px";
+    div.style.padding = "8px 16px";
+    div.style.background = "rgba(45, 45, 45, 0.8)";
+    div.style.color = "#E0E0E0";
+    div.style.fontFamily = "monospace";
+    div.style.fontSize = "16px";
+    div.style.fontWeight = "bold";
+    div.style.borderRadius = "8px";
+    div.style.zIndex = "999";
+    div.innerText = text;
+    document.body.appendChild(div);
+    return div;
+}
 
-const yawDiv = document.createElement("div");
-yawDiv.style.position = "absolute";
-yawDiv.style.top = "100px";
-yawDiv.style.left = "20px";
-yawDiv.style.padding = "8px 16px";
-yawDiv.style.background = "rgba(45, 45, 45, 0.8)";
-yawDiv.style.color = "#E0E0E0";
-yawDiv.style.fontFamily = "monospace";
-yawDiv.style.fontSize = "16px";
-yawDiv.style.fontWeight = "bold";
-yawDiv.style.borderRadius = "8px";
-yawDiv.style.zIndex = "999";
-yawDiv.innerText = "Yaw: 0°";
-document.body.appendChild(yawDiv);
-
-const posXDiv = document.createElement("div");
-posXDiv.style.position = "absolute";
-posXDiv.style.top = "140px"; 
-posXDiv.style.left = "20px";
-posXDiv.style.padding = "8px 16px";
-posXDiv.style.background = "rgba(45, 45, 45, 0.8)";
-posXDiv.style.color = "#E0E0E0";
-posXDiv.style.fontFamily = "monospace";
-posXDiv.style.fontSize = "16px";
-posXDiv.style.fontWeight = "bold";
-posXDiv.style.borderRadius = "8px";
-posXDiv.style.zIndex = "999";
-posXDiv.innerText = "Pos X: 0.00";
-document.body.appendChild(posXDiv);
-
-const posYDiv = document.createElement("div");
-posYDiv.style.position = "absolute";
-posYDiv.style.top = "180px";
-posYDiv.style.left = "20px";
-posYDiv.style.padding = "8px 16px";
-posYDiv.style.background = "rgba(45, 45, 45, 0.8)";
-posYDiv.style.color = "#E0E0E0";
-posYDiv.style.fontFamily = "monospace";
-posYDiv.style.fontSize = "16px";
-posYDiv.style.fontWeight = "bold";
-posYDiv.style.borderRadius = "8px";
-posYDiv.style.zIndex = "999";
-posYDiv.innerText = "Pos Y: 0.00";
-document.body.appendChild(posYDiv);
-
-const posZDiv = document.createElement("div");
-posZDiv.style.position = "absolute";
-posZDiv.style.top = "220px"; 
-posZDiv.style.left = "20px";
-posZDiv.style.padding = "8px 16px";
-posZDiv.style.background = "rgba(45, 45, 45, 0.8)";
-posZDiv.style.color = "#E0E0E0";
-posZDiv.style.fontFamily = "monospace";
-posZDiv.style.fontSize = "16px";
-posZDiv.style.fontWeight = "bold";
-posZDiv.style.borderRadius = "8px";
-posZDiv.style.zIndex = "999";
-posZDiv.innerText = "Pos Z: 0.00";
-document.body.appendChild(posZDiv);
-
-const altitudeDiv = document.createElement("div");
-altitudeDiv.style.position = "absolute";
-altitudeDiv.style.top = "20px";
-altitudeDiv.style.left = "20px";
-altitudeDiv.style.padding = "8px 16px";
-altitudeDiv.style.background = "rgba(45, 45, 45, 0.8)"; 
-altitudeDiv.style.color = "#E0E0E0"; 
-altitudeDiv.style.fontFamily = "monospace";
-altitudeDiv.style.fontSize = "16px";
-altitudeDiv.style.fontWeight = "bold"; 
-altitudeDiv.style.borderRadius = "8px";
-altitudeDiv.style.zIndex = "999";
-altitudeDiv.innerText = "Height: 0 m";
-document.body.appendChild(altitudeDiv);
-
-const velocityDiv = document.createElement("div");
-velocityDiv.style.position = "absolute";
-velocityDiv.style.top = "60px"; 
-velocityDiv.style.left = "20px";
-velocityDiv.style.padding = "8px 16px";
-velocityDiv.style.background = "rgba(45, 45, 45, 0.8)";
-velocityDiv.style.color = "#E0E0E0";
-velocityDiv.style.fontFamily = "monospace";
-velocityDiv.style.fontSize = "16px";
-velocityDiv.style.fontWeight = "bold";
-velocityDiv.style.borderRadius = "8px";
-velocityDiv.style.zIndex = "999";
-velocityDiv.innerText = "Velocity: 0 m/s";
-document.body.appendChild(velocityDiv);
-
+// استخدام الدالة لإنشاء اللوحات
+const altitudeDiv = createInfoPanel("Height: 0 m", 20);
+const velocityDiv = createInfoPanel("Velocity: 0 m/s", 60);
+const yawDiv = createInfoPanel("Yaw: 0°", 100);
+const posXDiv = createInfoPanel("Pos X: 0.00", 140);
+const posYDiv = createInfoPanel("Pos Y: 0.00", 180);
+const posZDiv = createInfoPanel("Pos Z: 0.00", 220);
 // add resize listener
 window.addEventListener("resize", () => {
   camera.aspect = window.innerWidth / window.innerHeight;
