@@ -1342,7 +1342,7 @@ let PARAMS = {
 // Skydiver mass
 // pane.addInput(PARAMS, "skydiverMass", { min: 40, max: 120, step: 1 });
 // Skydiver mass
-pane.addInput(PARAMS, "skydiverMass", { min: 80, max: 2000, step: 1 })
+pane.addInput(PARAMS, "skydiverMass", { min: 40, max: 2000, step: 1 })
     .on("change", (ev) => {
         parachute.mass = ev.value; // 🆕 ربط الكتلة بالفيزياء
         console.log(`⚖️ تم تغيير الكتلة إلى ${parachute.mass} كغ`);
