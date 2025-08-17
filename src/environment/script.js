@@ -496,15 +496,16 @@ window.addEventListener("keydown", (event) => {
         window.animate();
         console.log("▶️ بدء المحاكاة");
       }
-    } else if (ispilotDropping && window.parachute) {
-      window.isSimulationRunning = !window.isSimulationRunning;
-      if (window.isSimulationRunning) {
-        window.animate();
-        console.log("▶️ تم استئناف المحاكاة");
-      } else {
-        console.log("⏸️ تم إيقاف المحاكاة");
-      }
     }
+//  else if (ispilotDropping && window.parachute) {
+//       window.isSimulationRunning = !window.isSimulationRunning;
+//       if (window.isSimulationRunning) {
+//         window.animate();
+//         console.log("▶️ تم استئناف المحاكاة");
+//       } else {
+//         console.log("⏸️ تم إيقاف المحاكاة");
+//       }
+//     }
   }
 
 //   if (event.key === "a") {
@@ -635,7 +636,37 @@ window.addEventListener("keydown", (event) => {
 //     }
 //   }
 
-  if (event.key === "o") {
+//   if (event.key === "o") {
+//     dropSpeed = 10;
+//     if (pilotModel && !pilotHasParachute && ispilotDropping) {
+//       const parachute_1 = createParachute(0.4, 2.1);
+//       parachute_1.position.set(0, 3.2, 0);
+//       parachute_1.scale.setScalar(1.1);
+//       pilotModel.add(parachute_1);
+
+//       const parachute_3 = createParachute(0.4, 2.1);
+//       parachute_3.position.set(0, 3.2, 0);
+//       parachute_3.scale.setScalar(1.1);
+//       pilotLegsModel.add(parachute_3);
+
+//       const parachute_2 = createParachute(0.8, 2.1);
+//       parachute_2.position.set(0, 3.9, 0);
+//       parachute_2.scale.setScalar(1.1);
+//       pilotArmsModel.add(parachute_2);
+
+//       const parachute_4 = createParachute(0.8, 2.1);
+//       parachute_4.position.set(0, 3.4, 0);
+//       parachute_4.scale.setScalar(1.1);
+//       pilotArmsLegsModel.add(parachute_4);
+
+//       pilotHasParachute = true;
+//       parachute_1_Model = parachute_1;
+//       parachute_2_Model = parachute_2;
+//       parachute_3_Model = parachute_3;
+//       parachute_4_Model = parachute_4;
+//     }
+//   }
+if (event.key === "o") {
     dropSpeed = 10;
     if (pilotModel && !pilotHasParachute && ispilotDropping) {
       const parachute_1 = createParachute(0.4, 2.1);
@@ -663,8 +694,14 @@ window.addEventListener("keydown", (event) => {
       parachute_2_Model = parachute_2;
       parachute_3_Model = parachute_3;
       parachute_4_Model = parachute_4;
+      
+      if (window.parachute) {
+        window.parachute.isParachuteOpen = true;
+        console.log("🪂 تم فتح المظلة في المحاكاة الفيزيائية");
+      }
     }
   }
+
 
   if (event.key === "h") {
     dropSpeed = 50;
