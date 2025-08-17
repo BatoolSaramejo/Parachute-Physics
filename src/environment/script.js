@@ -39,7 +39,7 @@ skybox.position.y = -5000;
 scene.add(skybox);
 
 let PARAMS = {
-  skydiverMass: 80, // kg
+  skydiverMass: 100, // kg
   dragCoeff: 1.2, // typical for a human + parachute
   airplaneHeight: 1500, // 🆕 تم تعديل الارتفاع ليتطابق مع كود الفيزياء
   groundType: "hard", // sand, water, hard

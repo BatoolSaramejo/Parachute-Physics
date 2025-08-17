@@ -146,7 +146,7 @@ let isSimulationRunning = false;
 window.isSimulationRunning = isSimulationRunning;
 
 const parachute = new Parachute({
-//   mass: 90,
+  mass: 90,
   closedArea: 1.0,
   openArea: 15.0,
   dragCoeff: 1.2,
