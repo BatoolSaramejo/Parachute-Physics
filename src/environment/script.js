@@ -1660,6 +1660,21 @@ const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
+// 🆕 عنصر لعرض الارتفاع
+const altitudeDiv = document.createElement("div");
+altitudeDiv.style.position = "absolute";
+altitudeDiv.style.top = "20px";
+altitudeDiv.style.left = "20px";
+altitudeDiv.style.padding = "8px 14px";
+altitudeDiv.style.background = "rgba(0,0,0,0.6)";
+altitudeDiv.style.color = "white";
+altitudeDiv.style.fontFamily = "monospace";
+altitudeDiv.style.fontSize = "16px";
+altitudeDiv.style.borderRadius = "8px";
+altitudeDiv.style.zIndex = "999";
+altitudeDiv.innerText = "hight: 0 m";
+document.body.appendChild(altitudeDiv);
+
 // add resize listener
 window.addEventListener("resize", () => {
   camera.aspect = window.innerWidth / window.innerHeight;
@@ -1945,6 +1960,11 @@ const renderloop = () => {
   }
 
   updateLandingBox();
+// 🆕 تحديث قيمة الارتفاع
+if (pilotModel) {
+  const altitude = Math.max(0, Math.round(pilotModel.position.y - groundLevel));
+  altitudeDiv.innerText = `hight: ${altitude} m`;
+}
 
   renderer.render(scene, camera);
   window.requestAnimationFrame(renderloop);
