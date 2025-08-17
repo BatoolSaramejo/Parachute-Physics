@@ -130,9 +130,10 @@ pane.addInput(PARAMS, "armLength", { min: 0, max: 1, step: 1 })
   .on("change", (ev) => {
     if (window.parachute) {
       window.parachute.legPosture = ev.value;
-      console.log(`🦵 تم تغيير وضعية الأرجل إلى `);
+      console.log(`🦵 تم تغيير وضعية الأرجل إلى ${ev.value}`);
 
-      if (ev.value == 1) {
+      // تحديث النموذج المرئي بناءً على وضعية الأرجل
+      if (ev.value == 0) { //  القيمة 0 تعني "منشور"
         // إذا كانت الأيدي مضمومة، افتح الأرجل فقط
         if (pilotModel.visible) {
             pilotModel.visible = false;
@@ -143,9 +144,10 @@ pane.addInput(PARAMS, "armLength", { min: 0, max: 1, step: 1 })
             pilotArmsModel.visible = false;
             pilotArmsLegsModel.visible = true;
         }
-        window.parachute.changeLegPosture(1.5);
-        console.log("🦵 تم نشر الأرجل لزيادة المقاومة.");
-      } else {
+        window.parachute.changeLegPosture(1.0);
+                console.log("🦿 تم ضم الأرجل لتقليل المقاومة.");
+
+      } else { 
         // إذا كانت الأيدي مضمومة، اضم الأرجل فقط
         if (pilotLegsModel.visible) {
             pilotLegsModel.visible = false;
@@ -156,8 +158,9 @@ pane.addInput(PARAMS, "armLength", { min: 0, max: 1, step: 1 })
             pilotArmsLegsModel.visible = false;
             pilotArmsModel.visible = true;
         }
-        window.parachute.changeLegPosture(1.0);
-        console.log("🦿 تم ضم الأرجل لتقليل المقاومة.");
+        window.parachute.changeLegPosture(1.5);
+                console.log("🦵 تم نشر الأرجل لزيادة المقاومة.");
+
       }
     }
   });
