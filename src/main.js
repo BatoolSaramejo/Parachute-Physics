@@ -146,7 +146,7 @@ let isSimulationRunning = false;
 window.isSimulationRunning = isSimulationRunning;
 
 const parachute = new Parachute({
-  mass: 90,
+  mass: 60,
   closedArea: 1.0,
   openArea: 15.0,
   dragCoeff: 1.2,
@@ -156,22 +156,22 @@ window.parachute = parachute;
 
 window.addEventListener("keydown", (event) => {
   switch (event.key) {
-    case "n":
-      parachute.changePosture(1.5);
-      console.log("🤸‍♂️ تم نشر اليدين (وضعية أكبر تزيد مقاومة الهواء)");
-      break;
-    case "m":
-      parachute.changePosture(1.0);
-      console.log("🧍‍♂️ تم ضم اليدين (وضعية أصغر تقلل مقاومة الهواء)");
-      break;
-    case "b":
-      parachute.changeLegPosture(1.5);
-      console.log("🦵 تم نشر الرجلين (وضعية أكبر تزيد مقاومة الهواء)");
-      break;
-    case "v":
-      parachute.changeLegPosture(1.0);
-      console.log("🦵 تم ضم الرجلين (وضعية أصغر تقلل مقاومة الهواء)");
-      break;
+//     case "n":
+//       parachute.changePosture(1.5);
+//       console.log("🤸‍♂️ تم نشر اليدين (وضعية أكبر تزيد مقاومة الهواء)");
+//       break;
+//     case "m":
+//       parachute.changePosture(1.0);
+//       console.log("🧍‍♂️ تم ضم اليدين (وضعية أصغر تقلل مقاومة الهواء)");
+//       break;
+//     case "b":
+//       parachute.changeLegPosture(1.5);
+//       console.log("🦵 تم نشر الرجلين (وضعية أكبر تزيد مقاومة الهواء)");
+//       break;
+//     case "v":
+//       parachute.changeLegPosture(1.0);
+//       console.log("🦵 تم ضم الرجلين (وضعية أصغر تقلل مقاومة الهواء)");
+//       break;
     case "p":
       parachute.isParachuteOpen = !parachute.isParachuteOpen;
       console.log(parachute.isParachuteOpen ? "🪂 تم فتح المظلة" : "🎒 تم إغلاق المظلة");
@@ -192,13 +192,13 @@ window.addEventListener("keydown", (event) => {
       parachute.tensionRight = Math.max(0, parachute.tensionRight - 50);
       console.log(`➡️ تقليل الشد في الجهة اليمنى إلى ${parachute.tensionRight} نيوتن`);
       break;
-    case "z":
-      parachute.armLength += 0.05;
-      console.log(`🦾 زيادة طول الذراع إلى ${parachute.armLength.toFixed(2)} متر`);
-      break;
-    case "x":
-      parachute.armLength = Math.max(0.1, parachute.armLength - 0.05);
-      console.log(`🦿 تقليل طول الذراع إلى ${parachute.armLength.toFixed(2)} متر`);
+//     case "z":
+//       parachute.armLength += 0.05;
+//       console.log(`🦾 زيادة طول الذراع إلى ${parachute.armLength.toFixed(2)} متر`);
+//       break;
+//     case "x":
+//       parachute.armLength = Math.max(0.1, parachute.armLength - 0.05);
+//       console.log(`🦿 تقليل طول الذراع إلى ${parachute.armLength.toFixed(2)} متر`);
       break;
     case "c":
       parachute.yawDampingCoeff += 0.01;
@@ -256,10 +256,10 @@ window.addEventListener("keydown", (event) => {
 function animate() {
   if (!window.isSimulationRunning) return;
   parachute.update(0.05);
-  console.log(
-    `Pos: ${parachute.position.toString()} | Vel: ${parachute.velocity.toString()} | Wind: ${parachute.wind.toString()}`
-  );
-  console.log(`Yaw Angle: ${parachute.yawAngle.toFixed(2)}°`);
+//   console.log(
+//     `Pos: ${parachute.position.toString()} | Vel: ${parachute.velocity.toString()} | Wind: ${parachute.wind.toString()}`
+//   );
+//   console.log(`Yaw Angle: ${parachute.yawAngle.toFixed(2)}°`);
 
   if (parachute.position.y <= 0) {
     console.log("✅ Reached Ground");

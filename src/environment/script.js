@@ -1,4 +1,3 @@
-
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { Pane } from "tweakpane";
@@ -39,9 +38,9 @@ skybox.position.y = -5000;
 scene.add(skybox);
 
 let PARAMS = {
-  skydiverMass: 100, // kg
+  skydiverMass: 60, // kg
   dragCoeff: 1.2, // typical for a human + parachute
-  airplaneHeight: 1500, // 🆕 تم تعديل الارتفاع ليتطابق مع كود الفيزياء
+  airplaneHeight: 1500, 
   groundType: "hard", // sand, water, hard
   ropeStrength: 500, // Newtons before breaking
   windX: 0, // 🆕 جديد: قوة الرياح على محور X
@@ -50,23 +49,13 @@ let PARAMS = {
   tensionRight: 0, // 🆕 جديد: شد الحبل الأيمن
   yawDamping: 0.5, // arbitrary damping factor
   armLength: 0.8, // meters
+    legPosture: 1.0, 
 };
 
-// Skydiver mass
-// pane.addInput(PARAMS, "skydiverMass", { min: 40, max: 120, step: 1 });
-// Skydiver mass
-// Skydiver mass
-// pane.addInput(PARAMS, "skydiverMass", { min: 40, max: 2000, step: 1 })
-//     .on("change", (ev) => {
-//         window.parachute.mass = ev.value;
-//         console.log(`⚖️ تم تغيير الكتلة إلى ${window.parachute.mass} كغ`);
-//         // 🆕 إضافة تحديث عنصر الكتلة عند تغييرها
-//         massDiv.innerText = `Mass: ${window.parachute.mass} kg`;
-//     });
-// Skydiver mass
-pane.addInput(PARAMS, "skydiverMass", { min: 80, max: 2000, step: 1 })
+//skydiverMass
+pane.addInput(PARAMS, "skydiverMass", { min: 60, max: 114, step: 1 })
     .on("change", (ev) => {
-        parachute.mass = ev.value; // 🆕 ربط الكتلة بالفيزياء
+        parachute.mass = ev.value; 
         console.log(`⚖️ تم تغيير الكتلة إلى ${parachute.mass} كغ`);
     });
 
@@ -74,7 +63,7 @@ pane.addInput(PARAMS, "skydiverMass", { min: 80, max: 2000, step: 1 })
 pane.addInput(PARAMS, "dragCoeff", { min: 0.5, max: 2.5, step: 0.01 });
 
 // Airplane height
-pane.addInput(PARAMS, "airplaneHeight", { min: 3000, max: 8000, step: 100 });
+pane.addInput(PARAMS, "airplaneHeight", { min: 2500, max: 14000, step: 100 });
 
 // Ground type
 pane.addInput(PARAMS, "groundType", {
@@ -105,9 +94,74 @@ pane.addInput(PARAMS, "tensionRight", { min: 0, max: 200, step: 1, label: 'Tensi
 // Yaw damping coefficient
 pane.addInput(PARAMS, "yawDamping", { min: 0.1, max: 2.0, step: 0.01 });
 
-// Arm length
-pane.addInput(PARAMS, "armLength", { min: 0.3, max: 1.5, step: 0.01 });
+// 
+pane.addInput(PARAMS, "armLength", { min: 1, max: 1.5, step: 0.01 })
+  .on("change", (ev) => {
+    if (window.parachute) {
+      window.parachute.armLength = ev.value;
+      console.log(`🦾 تم تغيير طول الذراع إلى ${window.parachute.armLength.toFixed(2)} متر`);
 
+      if (ev.value > 1.0) {
+        if (pilotModel.visible) {
+            pilotModel.visible = false;
+            pilotArmsModel.visible = true;
+        }
+        if (pilotLegsModel.visible) {
+            pilotLegsModel.visible = false;
+            pilotArmsLegsModel.visible = true;
+        }
+        window.parachute.changePosture(1.5);
+        console.log("🤸‍♂️ تم نشر اليدين لزيادة المقاومة.");
+      } else {
+        if (pilotArmsModel.visible) {
+            pilotArmsModel.visible = false;
+            pilotModel.visible = true;
+        }
+        if (pilotArmsLegsModel.visible) {
+            pilotArmsLegsModel.visible = false;
+            pilotLegsModel.visible = true;
+        }
+        window.parachute.changePosture(1.0);
+        console.log("🧍‍♂️ تم ضم اليدين لتقليل المقاومة.");
+      }
+    }
+  });
+  pane.addInput(PARAMS, "legPosture", { min: 1, max: 1.5, step: 0.01 })
+  .on("change", (ev) => {
+    if (window.parachute) {
+      window.parachute.legPosture = ev.value;
+      console.log(`🦵 تم تغيير وضعية الأرجل إلى ${window.parachute.legPosture.toFixed(2)}`);
+
+      // 🆕 تحديث النموذج المرئي بناءً على وضعية الأرجل
+      if (ev.value > 1.0) {
+        // إذا كانت الأيدي مضمومة، افتح الأرجل فقط
+        if (pilotModel.visible) {
+            pilotModel.visible = false;
+            pilotLegsModel.visible = true;
+        }
+        // إذا كانت الأيدي مفتوحة، افتح الأرجل أيضًا
+        else if (pilotArmsModel.visible) {
+            pilotArmsModel.visible = false;
+            pilotArmsLegsModel.visible = true;
+        }
+        window.parachute.changeLegPosture(1.5);
+        console.log("🦵 تم نشر الأرجل لزيادة المقاومة.");
+      } else {
+        // إذا كانت الأيدي مضمومة، اضم الأرجل فقط
+        if (pilotLegsModel.visible) {
+            pilotLegsModel.visible = false;
+            pilotModel.visible = true;
+        }
+        // إذا كانت الأيدي مفتوحة، اضم الأرجل فقط
+        else if (pilotArmsLegsModel.visible) {
+            pilotArmsLegsModel.visible = false;
+            pilotArmsModel.visible = true;
+        }
+        window.parachute.changeLegPosture(1.0);
+        console.log("🦿 تم ضم الأرجل لتقليل المقاومة.");
+      }
+    }
+  });
 //  الكود الجديد لربط Tweakpane مع الرياح وشد الحبال
 pane.on('change', (ev) => {
   if (!window.parachute) return;
@@ -379,7 +433,7 @@ const camera = new THREE.PerspectiveCamera(
   100000
 );
 
-// 🆕 موضع الكاميرا الأولي
+
 camera.position.set(0, groundLevel + PARAMS["airplaneHeight"] + 50, 200);
 
 // initialize the renderer
@@ -389,10 +443,9 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
 
-// 🆕 عنصر جديد لعرض زاوية الانحراف (Yaw Angle)
 const yawDiv = document.createElement("div");
 yawDiv.style.position = "absolute";
-yawDiv.style.top = "100px"; // زيادة المسافة لوضعه أسفل الكتلة
+yawDiv.style.top = "100px";
 yawDiv.style.left = "20px";
 yawDiv.style.padding = "8px 16px";
 yawDiv.style.background = "rgba(45, 45, 45, 0.8)";
@@ -405,26 +458,69 @@ yawDiv.style.zIndex = "999";
 yawDiv.innerText = "Yaw: 0°";
 document.body.appendChild(yawDiv);
 
-// 🆕 عنصر لعرض الارتفاع
+const posXDiv = document.createElement("div");
+posXDiv.style.position = "absolute";
+posXDiv.style.top = "140px"; 
+posXDiv.style.left = "20px";
+posXDiv.style.padding = "8px 16px";
+posXDiv.style.background = "rgba(45, 45, 45, 0.8)";
+posXDiv.style.color = "#E0E0E0";
+posXDiv.style.fontFamily = "monospace";
+posXDiv.style.fontSize = "16px";
+posXDiv.style.fontWeight = "bold";
+posXDiv.style.borderRadius = "8px";
+posXDiv.style.zIndex = "999";
+posXDiv.innerText = "Pos X: 0.00";
+document.body.appendChild(posXDiv);
+
+const posYDiv = document.createElement("div");
+posYDiv.style.position = "absolute";
+posYDiv.style.top = "180px";
+posYDiv.style.left = "20px";
+posYDiv.style.padding = "8px 16px";
+posYDiv.style.background = "rgba(45, 45, 45, 0.8)";
+posYDiv.style.color = "#E0E0E0";
+posYDiv.style.fontFamily = "monospace";
+posYDiv.style.fontSize = "16px";
+posYDiv.style.fontWeight = "bold";
+posYDiv.style.borderRadius = "8px";
+posYDiv.style.zIndex = "999";
+posYDiv.innerText = "Pos Y: 0.00";
+document.body.appendChild(posYDiv);
+
+const posZDiv = document.createElement("div");
+posZDiv.style.position = "absolute";
+posZDiv.style.top = "220px"; 
+posZDiv.style.left = "20px";
+posZDiv.style.padding = "8px 16px";
+posZDiv.style.background = "rgba(45, 45, 45, 0.8)";
+posZDiv.style.color = "#E0E0E0";
+posZDiv.style.fontFamily = "monospace";
+posZDiv.style.fontSize = "16px";
+posZDiv.style.fontWeight = "bold";
+posZDiv.style.borderRadius = "8px";
+posZDiv.style.zIndex = "999";
+posZDiv.innerText = "Pos Z: 0.00";
+document.body.appendChild(posZDiv);
+
 const altitudeDiv = document.createElement("div");
 altitudeDiv.style.position = "absolute";
 altitudeDiv.style.top = "20px";
 altitudeDiv.style.left = "20px";
 altitudeDiv.style.padding = "8px 16px";
-altitudeDiv.style.background = "rgba(45, 45, 45, 0.8)"; // لون رمادي داكن
-altitudeDiv.style.color = "#E0E0E0"; // لون أفتح للنص
+altitudeDiv.style.background = "rgba(45, 45, 45, 0.8)"; 
+altitudeDiv.style.color = "#E0E0E0"; 
 altitudeDiv.style.fontFamily = "monospace";
 altitudeDiv.style.fontSize = "16px";
-altitudeDiv.style.fontWeight = "bold"; // جعل الخط عريضاً
+altitudeDiv.style.fontWeight = "bold"; 
 altitudeDiv.style.borderRadius = "8px";
 altitudeDiv.style.zIndex = "999";
 altitudeDiv.innerText = "Height: 0 m";
 document.body.appendChild(altitudeDiv);
 
-// 🆕 عنصر لعرض السرعة
 const velocityDiv = document.createElement("div");
 velocityDiv.style.position = "absolute";
-velocityDiv.style.top = "60px"; // تقليل المسافة من الأعلى
+velocityDiv.style.top = "60px"; 
 velocityDiv.style.left = "20px";
 velocityDiv.style.padding = "8px 16px";
 velocityDiv.style.background = "rgba(45, 45, 45, 0.8)";
@@ -446,9 +542,8 @@ window.addEventListener("resize", () => {
 
 let dropSpeed = 50;
 
-// 🆕 متغير جديد للتحكم في دوران الكاميرا
 let cameraAngle = 0;
-const cameraRadius = 100; // نصف قطر الدوران
+const cameraRadius = 100; 
 
 // add keyboard listener
 
@@ -459,7 +554,6 @@ window.addEventListener("keydown", (event) => {
       pilotModel.visible = true;
       currentCameraTarget = "pilot";
 
-      // 🆕 مزامنة ارتفاع الفيزياء مع ارتفاع الطائرة وبدء المحاكاة
       if (window.parachute) {
         window.parachute.position.y = PARAMS["airplaneHeight"];
         window.isSimulationRunning = true;
@@ -467,7 +561,6 @@ window.addEventListener("keydown", (event) => {
         console.log("▶️ بدء المحاكاة");
       }
     } else if (ispilotDropping && window.parachute) {
-      // 🆕 إيقاف/استئناف المحاكاة
       window.isSimulationRunning = !window.isSimulationRunning;
       if (window.isSimulationRunning) {
         window.animate();
@@ -478,97 +571,133 @@ window.addEventListener("keydown", (event) => {
     }
   }
 
-  if (event.key === "a") {
-    // open Arms
-    if (
-      pilotModel &&
-      pilotArmsModel &&
-      planeModel &&
-      ispilotDropping &&
-      pilotModel.visible
-    ) {
-      pilotModel.visible = false;
-      pilotArmsModel.visible = true;
-    } else if (
-      pilotLegsModel &&
-      pilotArmsLegsModel &&
-      planeModel &&
-      ispilotDropping &&
-      pilotLegsModel.visible
-    ) {
-      pilotLegsModel.visible = false;
-      pilotArmsLegsModel.visible = true;
-    }
-  }
+//   if (event.key === "a") {
+  
+//     // open Arms
+//     if (
+//       pilotModel &&
+//       pilotArmsModel &&
+//       planeModel &&
+//       ispilotDropping &&
+//       pilotModel.visible
+//     ) {
+//       pilotModel.visible = false;
+//       pilotArmsModel.visible = true;
+//     } else if (
+//       pilotLegsModel &&
+//       pilotArmsLegsModel &&
+//       planeModel &&
+//       ispilotDropping &&
+//       pilotLegsModel.visible
+//     ) {
+//       pilotLegsModel.visible = false;
+//       pilotArmsLegsModel.visible = true;
+//     }
+//   }
 
-  if (event.key === "c") {
-    // close Arms
-    if (
-      pilotModel &&
-      pilotArmsModel &&
-      planeModel &&
-      ispilotDropping &&
-      pilotArmsModel.visible
-    ) {
-      pilotModel.visible = true;
-      pilotArmsModel.visible = false;
-    } else if (
-      pilotLegsModel &&
-      pilotArmsLegsModel &&
-      planeModel &&
-      ispilotDropping &&
-      pilotArmsLegsModel.visible
-    ) {
-      pilotLegsModel.visible = true;
-      pilotArmsLegsModel.visible = false;
-    }
-  }
+//   if (event.key === "c") {
+//     // close Arms
+//     if (
+//       pilotModel &&
+//       pilotArmsModel &&
+//       planeModel &&
+//       ispilotDropping &&
+//       pilotArmsModel.visible
+//     ) {
+//       pilotModel.visible = true;
+//       pilotArmsModel.visible = false;
+//     } else if (
+//       pilotLegsModel &&
+//       pilotArmsLegsModel &&
+//       planeModel &&
+//       ispilotDropping &&
+//       pilotArmsLegsModel.visible
+//     ) {
+//       pilotLegsModel.visible = true;
+//       pilotArmsLegsModel.visible = false;
+//     }
+//   }
 
-  if (event.key === "l" && ispilotDropping) {
-    // open legs
-    if (
-      pilotModel &&
-      pilotLegsModel &&
-      planeModel &&
-      ispilotDropping &&
-      pilotModel.visible
-    ) {
-      pilotModel.visible = false;
-      pilotLegsModel.visible = true;
-    } else if (
-      pilotModel &&
-      pilotArmsLegsModel &&
-      planeModel &&
-      ispilotDropping &&
-      pilotArmsModel.visible
-    ) {
-      pilotArmsModel.visible = false;
-      pilotArmsLegsModel.visible = true;
-    }
-  }
 
-  if (event.key === "x") {
-    // close Legs
-    if (
-      pilotModel &&
-      pilotLegsModel &&
-      planeModel &&
-      ispilotDropping &&
-      pilotLegsModel.visible
-    ) {
-      pilotModel.visible = true;
-      pilotLegsModel.visible = false;
-    } else if (
-      pilotModel &&
-      pilotArmsLegsModel &&
-      planeModel &&
-      ispilotDropping &&
-      pilotArmsLegsModel.visible
-    ) {
-      pilotArmsModel.visible = true;
-      pilotArmsLegsModel.visible = false;
-    }
-  }
+//   if (event.key === "l" && ispilotDropping) {
+//     // open legs
+//     if (
+//       pilotModel &&
+//       pilotLegsModel &&
+//       planeModel &&
+//       ispilotDropping &&
+//       pilotModel.visible
+//     ) {
+//       pilotModel.visible = false;
+//       pilotLegsModel.visible = true;
+//     } else if (
+//       pilotModel &&
+//       pilotArmsLegsModel &&
+//       planeModel &&
+//       ispilotDropping &&
+//       pilotArmsModel.visible
+//     ) {
+//       pilotArmsModel.visible = false;
+//       pilotArmsLegsModel.visible = true;
+//     }
+//   }
+// if (event.key === "l" && ispilotDropping) {
+//     if (window.parachute) {
+//       if (pilotModel.visible) {
+//         pilotModel.visible = false;
+//         pilotLegsModel.visible = true;
+//         window.parachute.changeLegPosture(1.5);
+//         console.log("🦵 تم نشر الأرجل. (وضعية أكبر تزيد مقاومة الهواء)");
+//       } 
+//       else if (pilotArmsModel.visible) {
+//         pilotArmsModel.visible = false;
+//         pilotArmsLegsModel.visible = true;
+//         // تحديث وضعية الأرجل في الفيزياء لزيادة المقاومة
+//         window.parachute.changeLegPosture(1.5);
+//         console.log("🦵 تم نشر الأرجل. (وضعية أكبر تزيد مقاومة الهواء)");
+//       }
+//     }
+//   }
+
+//   if (event.key === "x") {
+//     // close Legs
+//     if (
+//       pilotModel &&
+//       pilotLegsModel &&
+//       planeModel &&
+//       ispilotDropping &&
+//       pilotLegsModel.visible
+//     ) {
+//       pilotModel.visible = true;
+//       pilotLegsModel.visible = false;
+//     } else if (
+//       pilotModel &&
+//       pilotArmsLegsModel &&
+//       planeModel &&
+//       ispilotDropping &&
+//       pilotArmsLegsModel.visible
+//     ) {
+//       pilotArmsModel.visible = true;
+//       pilotArmsLegsModel.visible = false;
+//     }
+//   }
+// if (event.key === "x") {
+//     if (ispilotDropping && window.parachute) {
+//       if (pilotLegsModel.visible) {
+//         pilotLegsModel.visible = false;
+//         pilotModel.visible = true;
+//         window.parachute.changeLegPosture(1.0);
+//         console.log("🦿 تم ضم الأرجل. (وضعية أصغر تقلل مقاومة الهواء)");
+//       } 
+//       else if (pilotArmsLegsModel.visible) {
+//         pilotArmsLegsModel.visible = false;
+//         pilotArmsModel.visible = true;
+//         // تحديث وضعية الأرجل في الفيزياء لتقليل المقاومة
+//         window.parachute.changeLegPosture(1.0);
+//         console.log("🦿 تم ضم الأرجل. (وضعية أصغر تقلل مقاومة الهواء)");
+//       }
+//     }
+//   }
 
   if (event.key === "o") {
     dropSpeed = 10;
@@ -660,7 +789,6 @@ const renderloop = () => {
     pilotModel.position.x = window.parachute.position.x;
     pilotModel.position.z = window.parachute.position.z;
 
-    //  تحديث زاوية الدوران 
     pilotModel.rotation.y = window.parachute.yawAngle * Math.PI / 180;
 
     if (pilotArmsModel) pilotArmsModel.position.copy(pilotModel.position);
@@ -707,38 +835,37 @@ const renderloop = () => {
       )
     );
   } else if (currentCameraTarget === "helicopter" && planeModel) {
-    cameraAngle += 0.002; // سرعة الدوران
+    cameraAngle += 0.002; 
     camera.position.x = planeModel.position.x + Math.sin(cameraAngle) * cameraRadius;
     camera.position.y = planeModel.position.y + 20; // ارتفاع الكاميرا
     camera.position.z = planeModel.position.z + Math.cos(cameraAngle) * cameraRadius;
     camera.lookAt(planeModel.position);
   }
-
   if (reachedGround) {
     pilotModel.position.y = groundLevel + 1;
     pilotArmsModel.position.y = groundLevel + 1;
     pilotLegsModel.position.y = groundLevel + 1;
     pilotArmsLegsModel.position.y = groundLevel + 1;
   }
-
   updateLandingBox();
-// 🆕 تحديث قيمة الارتفاع
+
 if (pilotModel) {
   const altitude = Math.max(0, Math.round(pilotModel.position.y - groundLevel));
   altitudeDiv.innerText = `hight: ${altitude} m`;
 }
-// 🆕 إضافة تحديث قيمة السرعة
   if (window.parachute) {
-    const velocityY = window.parachute.velocity.y.toFixed(2); // استخدم toFixed(2) لتحديد رقمين عشريين
+    const velocityY = window.parachute.velocity.y.toFixed(2); 
     velocityDiv.innerText = `Velocity: ${-velocityY} m/s`;
+ const posX = window.parachute.position.x.toFixed(2);
+ const posY = window.parachute.position.y.toFixed(2);
+    const posZ = window.parachute.position.z.toFixed(2);
+    posXDiv.innerText = `Pos X: ${posX}`;
+    posYDiv.innerText = `Pos Y: ${posY}`;
+    posZDiv.innerText = `Pos Z: ${posZ}`;
  yawDiv.innerText = `Angle: ${window.parachute.yawAngle.toFixed(0)}°`;
-
   } 
-// if (window.parachute && massDiv) {
-//         massDiv.innerText = `Mass: ${window.parachute.mass.toFixed(0)} kg`;
-//     }
+
   renderer.render(scene, camera);
   window.requestAnimationFrame(renderloop);
 };
-
 renderloop();
