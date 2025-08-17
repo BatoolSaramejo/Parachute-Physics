@@ -48,8 +48,8 @@ let PARAMS = {
   tensionLeft: 0, // 🆕 جديد: شد الحبل الأيسر
   tensionRight: 0, // 🆕 جديد: شد الحبل الأيمن
   yawDamping: 0.5, // arbitrary damping factor
-  armLength: 0.8, // meters
-    legPosture: 1.0, 
+  armLength: 1, // meters
+  legPosture: 0, 
 };
 
 //skydiverMass
@@ -95,13 +95,13 @@ pane.addInput(PARAMS, "tensionRight", { min: 0, max: 200, step: 1, label: 'Tensi
 pane.addInput(PARAMS, "yawDamping", { min: 0.1, max: 2.0, step: 0.01 });
 
 // 
-pane.addInput(PARAMS, "armLength", { min: 1, max: 1.5, step: 0.01 })
+pane.addInput(PARAMS, "armLength", { min: 0, max: 1, step: 1 })
   .on("change", (ev) => {
     if (window.parachute) {
       window.parachute.armLength = ev.value;
-      console.log(`🦾 تم تغيير طول الذراع إلى ${window.parachute.armLength.toFixed(2)} متر`);
+      console.log("🦾 تم تغيير طول الذراع إلى ");
 
-      if (ev.value > 1.0) {
+      if (ev.value == 1) {
         if (pilotModel.visible) {
             pilotModel.visible = false;
             pilotArmsModel.visible = true;
@@ -126,14 +126,13 @@ pane.addInput(PARAMS, "armLength", { min: 1, max: 1.5, step: 0.01 })
       }
     }
   });
-  pane.addInput(PARAMS, "legPosture", { min: 1, max: 1.5, step: 0.01 })
+  pane.addInput(PARAMS, "legPosture", { min: 0, max: 1, step: 1 })
   .on("change", (ev) => {
     if (window.parachute) {
       window.parachute.legPosture = ev.value;
-      console.log(`🦵 تم تغيير وضعية الأرجل إلى ${window.parachute.legPosture.toFixed(2)}`);
+      console.log(`🦵 تم تغيير وضعية الأرجل إلى `);
 
-      // 🆕 تحديث النموذج المرئي بناءً على وضعية الأرجل
-      if (ev.value > 1.0) {
+      if (ev.value == 1) {
         // إذا كانت الأيدي مضمومة، افتح الأرجل فقط
         if (pilotModel.visible) {
             pilotModel.visible = false;
@@ -442,7 +441,6 @@ const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-// دالة لإنشاء وتنسيق لوحة المعلومات
 function createInfoPanel(text, topPosition) {
     const div = document.createElement("div");
     div.style.position = "absolute";
