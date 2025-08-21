@@ -42,7 +42,7 @@ let PARAMS = {
   dragCoeff: 1.2, // typical for a human + parachute
   airplaneHeight: 1500, 
   groundType: "hard", // sand, water, hard
-  ropeStrength: 500, // Newtons before breaking
+//   ropeStrength: 500, // Newtons before breaking
   windX: 0, // 🆕 جديد: قوة الرياح على محور X
   windZ: 0, // 🆕 جديد: قوة الرياح على محور Z
   tensionLeft: 0, // 🆕 جديد: شد الحبل الأيسر
@@ -63,7 +63,7 @@ pane.addInput(PARAMS, "skydiverMass", { min: 60, max: 114, step: 1 })
 pane.addInput(PARAMS, "dragCoeff", { min: 0.5, max: 2.5, step: 0.01 });
 
 // Airplane height
-pane.addInput(PARAMS, "airplaneHeight", { min: 2500, max: 14000, step: 100 });
+pane.addInput(PARAMS, "airplaneHeight", { min: 1000, max: 2500, step: 100 });
 
 // Ground type
 pane.addInput(PARAMS, "groundType", {
@@ -75,7 +75,7 @@ pane.addInput(PARAMS, "groundType", {
 });
 
 // Rope tensile strength
-pane.addInput(PARAMS, "ropeStrength", { min: 100, max: 2000, step: 10 });
+// pane.addInput(PARAMS, "ropeStrength", { min: 100, max: 2000, step: 10 });
 
 //  تعديل: تحكم مباشر بقوة الرياح على المحورين X و Z
 // Wind on X-axis (East/West)
