@@ -497,7 +497,7 @@ if (ispilotDropping && window.parachute) {
                 pilotArmsModel.visible = false;
                 pilotArmsLegsModel.visible = true;
             }
-            window.parachute.changeLegPosture(1.5);
+            window.parachute.changeLegPosture(1.0);
             console.log("🦵 تم نشر الأرجل لزيادة المقاومة.");
         }
 
@@ -510,7 +510,7 @@ if (ispilotDropping && window.parachute) {
                 pilotArmsLegsModel.visible = false;
                 pilotArmsModel.visible = true;
             }
-            window.parachute.changeLegPosture(1.0);
+            window.parachute.changeLegPosture(1.5);
             console.log("🦿 تم ضم الأرجل لتقليل المقاومة.");
         }
     }
@@ -561,7 +561,6 @@ if (event.key === "h") {
         parachute_3_Model.visible = false;
         parachute_4_Model.visible = false;
         
-        // 🆕 Add this line to close the parachute in the physics simulation
         if (window.parachute) {
             window.parachute.isParachuteOpen = false;
             console.log("🎒 تم إغلاق المظلة في المحاكاة الفيزيائية");
