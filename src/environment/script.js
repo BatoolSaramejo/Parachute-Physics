@@ -90,10 +90,10 @@ pane.addInput(PARAMS, "windZ", { min: -80, max: 80, step: 1, label: 'Wind Z (N/S
 
 
 //تحكم بشد الحبل الأيسر
-pane.addInput(PARAMS, "tensionLeft", { min: 0, max: 200, step: 1, label: 'Tension Left' });
+pane.addInput(PARAMS, "tensionLeft", { min: 0, max: 50, step: 1, label: 'Tension Left' });
 
 //  تحكم بشد الحبل الأيمن
-pane.addInput(PARAMS, "tensionRight", { min: 0, max: 200, step: 1, label: 'Tension Right' });
+pane.addInput(PARAMS, "tensionRight", { min: 0, max: 50, step: 1, label: 'Tension Right' });
 
 
 //  الكود الجديد لربط Tweakpane مع الرياح وشد الحبال
