@@ -33,10 +33,10 @@ window.addEventListener("keydown", (event) => {
 //       parachute.changeLegPosture(1.0);
 //       console.log("🦵 تم ضم الرجلين (وضعية أصغر تقلل مقاومة الهواء)");
 //       break;
-    case "p":
-      parachute.isParachuteOpen = !parachute.isParachuteOpen;
-      console.log(parachute.isParachuteOpen ? "🪂 تم فتح المظلة" : "🎒 تم إغلاق المظلة");
-      break;
+//     case "p":
+//       parachute.isParachuteOpen = !parachute.isParachuteOpen;
+//       console.log(parachute.isParachuteOpen ? "🪂 تم فتح المظلة" : "🎒 تم إغلاق المظلة");
+//       break;
     case "q":
       parachute.tensionLeft += 50;
       console.log(`⬅️ زيادة الشد في الجهة اليسرى إلى ${parachute.tensionLeft} نيوتن`);
@@ -60,7 +60,7 @@ window.addEventListener("keydown", (event) => {
 //     case "x":
 //       parachute.armLength = Math.max(0.1, parachute.armLength - 0.05);
 //       console.log(`🦿 تقليل طول الذراع إلى ${parachute.armLength.toFixed(2)} متر`);
-      break;
+//       break;
     case "c":
       parachute.yawDampingCoeff += 0.01;
       console.log(`🌀 زيادة معامل مقاومة الدوران إلى ${parachute.yawDampingCoeff.toFixed(2)}`);
@@ -79,38 +79,38 @@ window.addEventListener("keydown", (event) => {
 //       console.log("🔄 إعادة تعيين المحاكاة");
 //       window.isSimulationRunning = false;
 //       break;
-    case "1":
-      parachute.surfaceType = "hard";
-      console.log("🪨 تم اختيار سطح صلب");
-      break;
-    case "2":
-      parachute.surfaceType = "sand";
-      console.log("🏖️ تم اختيار سطح رملي");
-      break;
-    case "3":
-      parachute.surfaceType = "water";
-      console.log("🌊 تم اختيار سطح مائي");
-      break;
-    case "4":
-      parachute.surfaceType = "ice";
-      console.log("❄️ تم اختيار سطح جليدي");
-      break;
-    case "ArrowUp":
-      parachute.wind.z -= 1;
-      console.log(`💨 زيادة قوة الرياح على محور Z إلى ${parachute.wind.z.toFixed(2)}`);
-      break;
-    case "ArrowDown":
-      parachute.wind.z += 1;
-      console.log(`💨 تقليل قوة الرياح على محور Z إلى ${parachute.wind.z.toFixed(2)}`);
-      break;
-    case "ArrowLeft":
-      parachute.wind.x -= 1;
-      console.log(`💨 زيادة قوة الرياح على محور X إلى ${parachute.wind.x.toFixed(2)}`);
-      break;
-    case "ArrowRight":
-      parachute.wind.x += 1;
-      console.log(`💨 تقليل قوة الرياح على محور X إلى ${parachute.wind.x.toFixed(2)}`);
-      break;
+//     case "1":
+//       parachute.surfaceType = "hard";
+//       console.log("🪨 تم اختيار سطح صلب");
+//       break;
+//     case "2":
+//       parachute.surfaceType = "sand";
+//       console.log("🏖️ تم اختيار سطح رملي");
+//       break;
+//     case "3":
+//       parachute.surfaceType = "water";
+//       console.log("🌊 تم اختيار سطح مائي");
+//       break;
+//     case "4":
+//       parachute.surfaceType = "ice";
+//       console.log("❄️ تم اختيار سطح جليدي");
+//       break;
+//     case "ArrowUp":
+//       parachute.wind.z -= 1;
+//       console.log(`💨 زيادة قوة الرياح على محور Z إلى ${parachute.wind.z.toFixed(2)}`);
+//       break;
+//     case "ArrowDown":
+//       parachute.wind.z += 1;
+//       console.log(`💨 تقليل قوة الرياح على محور Z إلى ${parachute.wind.z.toFixed(2)}`);
+//       break;
+//     case "ArrowLeft":
+//       parachute.wind.x -= 1;
+//       console.log(`💨 زيادة قوة الرياح على محور X إلى ${parachute.wind.x.toFixed(2)}`);
+//       break;
+//     case "ArrowRight":
+//       parachute.wind.x += 1;
+//       console.log(`💨 تقليل قوة الرياح على محور X إلى ${parachute.wind.x.toFixed(2)}`);
+//       break;
   }
 });
 
