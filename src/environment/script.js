@@ -14,14 +14,13 @@ const textureLoader = new THREE.TextureLoader();
 
 const parachuteTexture = textureLoader.load("textures/parachute.jpg");
 // add skybox
-
-let materialArray = [];
-let texture_ft = new THREE.TextureLoader().load("textures/cubeMap/px.jpg");
-let texture_bk = new THREE.TextureLoader().load("textures/cubeMap/nx.jpg");
-let texture_up = new THREE.TextureLoader().load("textures/cubeMap/py.jpg");
-let texture_dn = new THREE.TextureLoader().load("textures/cubeMap/ny.jpg");
-let texture_rt = new THREE.TextureLoader().load("textures/cubeMap/pz.jpg");
-let texture_lf = new THREE.TextureLoader().load("textures/cubeMap/nz.jpg");
+let materialArray=[];
+let texture_ft = new THREE.TextureLoader().load("textures/cubeMap/px.png");
+let texture_bk = new THREE.TextureLoader().load("textures/cubeMap/nx.png");
+let texture_up = new THREE.TextureLoader().load("textures/cubeMap/py.png");
+let texture_dn = new THREE.TextureLoader().load("textures/cubeMap/ny.png");
+let texture_rt = new THREE.TextureLoader().load("textures/cubeMap/pz.png");
+let texture_lf = new THREE.TextureLoader().load("textures/cubeMap/nz.png");
 
 materialArray.push(new THREE.MeshBasicMaterial({ map: texture_ft }));
 materialArray.push(new THREE.MeshBasicMaterial({ map: texture_bk }));
@@ -32,9 +31,9 @@ materialArray.push(new THREE.MeshBasicMaterial({ map: texture_lf }));
 
 for (let i = 0; i < 6; i++) materialArray[i].side = THREE.BackSide;
 
-let skyboxGeo = new THREE.BoxGeometry(50000, 50000, 50000);
+let skyboxGeo = new THREE.BoxGeometry(60000, 10000, 60000);
 let skybox = new THREE.Mesh(skyboxGeo, materialArray);
-skybox.position.y = -5000;
+skybox.position.y = -25000;
 scene.add(skybox);
 
 let PARAMS = {
@@ -370,10 +369,13 @@ updateLandingBox();
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
 scene.add(ambientLight);
 
-const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-directionalLight.position.set(5, 10, 7.5);
-scene.add(directionalLight);
+// const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+// directionalLight.position.set(5, 10, 7.5);
+// scene.add(directionalLight);
 
+const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+directionalLight.position.set(1000, groundLevel + PARAMS["airplaneHeight"] + 1000, 1000);
+scene.add(directionalLight);
 // initialize the camera
 const camera = new THREE.PerspectiveCamera(
   75,
@@ -497,7 +499,7 @@ if (ispilotDropping && window.parachute) {
                 pilotArmsModel.visible = false;
                 pilotArmsLegsModel.visible = true;
             }
-            window.parachute.changeLegPosture(1.0);
+            window.parachute.changeLegPosture(1.5);
             console.log("🦵 تم نشر الأرجل لزيادة المقاومة.");
         }
 
@@ -510,7 +512,7 @@ if (ispilotDropping && window.parachute) {
                 pilotArmsLegsModel.visible = false;
                 pilotArmsModel.visible = true;
             }
-            window.parachute.changeLegPosture(1.5);
+            window.parachute.changeLegPosture(1.0);
             console.log("🦿 تم ضم الأرجل لتقليل المقاومة.");
         }
     }
@@ -681,8 +683,7 @@ if (pilotModel) {
   altitudeDiv.innerText = `hight: ${altitude} m`;
 }
   if (window.parachute) {
-const accelerationY = window.parachute.acceleration.y;
-    const velocityY = window.parachute.velocity.y.toFixed(2); 
+const accelerationY = window.parachute.acceleration.y; const velocityY = window.parachute.velocity.y.toFixed(2); 
     velocityDiv.innerText = `Velocity: ${-velocityY} m/s`;
 accelerationDiv.innerText = `Acceleration: ${accelerationY.toFixed(2)} m/s²`; const posX = window.parachute.position.x.toFixed(2);
  const posY = window.parachute.position.y.toFixed(2);
