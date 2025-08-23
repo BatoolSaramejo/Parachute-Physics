@@ -681,12 +681,10 @@ if (pilotModel) {
   altitudeDiv.innerText = `hight: ${altitude} m`;
 }
   if (window.parachute) {
-      const accelerationMagnitude = window.parachute.acceleration.magnitude();
-
+const accelerationY = window.parachute.acceleration.y;
     const velocityY = window.parachute.velocity.y.toFixed(2); 
     velocityDiv.innerText = `Velocity: ${-velocityY} m/s`;
-accelerationDiv.innerText = `Acceleration: ${accelerationMagnitude.toFixed(2)} m/s²`;
- const posX = window.parachute.position.x.toFixed(2);
+accelerationDiv.innerText = `Acceleration: ${accelerationY.toFixed(2)} m/s²`; const posX = window.parachute.position.x.toFixed(2);
  const posY = window.parachute.position.y.toFixed(2);
     const posZ = window.parachute.position.z.toFixed(2);
     posXDiv.innerText = `Pos X: ${posX}`;
