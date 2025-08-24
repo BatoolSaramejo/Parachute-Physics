@@ -42,12 +42,12 @@ let PARAMS = {
   airplaneHeight: 1500, 
   groundType: "hard", // sand, water, hard
 //   ropeStrength: 500, // Newtons before breaking
-  windX: 0, // 🆕 جديد: قوة الرياح على محور X
-  windZ: 0, // 🆕 جديد: قوة الرياح على محور Z
-  tensionLeft: 0, // 🆕 جديد: شد الحبل الأيسر
-  tensionRight: 0, // 🆕 جديد: شد الحبل الأيمن
-  yawDamping: 0.5, // arbitrary damping factor
-  armLength: 1, // meters
+  windX: 0, // قوة الرياح على محور X
+  windZ: 0, // قوة الرياح على محور Z
+  tensionLeft: 0, //  شد الحبل الأيسر
+  tensionRight: 0, //  شد الحبل الأيمن
+  yawDamping: 0.5,
+  armLength: 1, 
   legPosture: 0, 
 };
 
@@ -78,15 +78,11 @@ const yawDampingInput = pane.addInput(PARAMS, "yawDamping", {
     max: 2.0,
     step: 0.01
 });
-
-
-//  تعديل: تحكم مباشر بقوة الرياح على المحورين X و Z
-// Wind on X-axis (East/West)
+// Wind 
 pane.addInput(PARAMS, "windX", { min: -80, max: 80, step: 1, label: 'Wind X (E/W)' });
 
-// Wind on Z-axis (North/South)
+// Wind 
 pane.addInput(PARAMS, "windZ", { min: -80, max: 80, step: 1, label: 'Wind Z (N/S)' });
-
 
 //تحكم بشد الحبل الأيسر
 pane.addInput(PARAMS, "tensionLeft", { min: 0, max: 50, step: 1, label: 'Tension Left' });
@@ -94,59 +90,50 @@ pane.addInput(PARAMS, "tensionLeft", { min: 0, max: 50, step: 1, label: 'Tension
 //  تحكم بشد الحبل الأيمن
 pane.addInput(PARAMS, "tensionRight", { min: 0, max: 50, step: 1, label: 'Tension Right' });
 
-
-//  الكود الجديد لربط Tweakpane مع الرياح وشد الحبال
 pane.on('change', (ev) => {
   if (!window.parachute) return;
-// 🆕 ربط معامل التخميد الدوراني بمعامل مقاومة الهواء
+//  ربط مقاومة الدوران ب مقاومة الهواء
 if (ev.presetKey === 'dragCoeff') {
     window.parachute.dragCoeff = ev.value;
     const newYawDamping = ev.value * 0.4;
     window.parachute.yawDampingCoeff = newYawDamping;
-    // تحديث القيمة المعروضة في Tweakpane
     yawDampingInput.value = newYawDamping;
     console.log(`💨 تم تحديث معامل مقاومة الهواء إلى: ${ev.value}`);
     console.log(`🌀 تم تحديث معامل التخميد الدوراني إلى: ${newYawDamping.toFixed(2)}`);
 }
 
-// 🆕 تحديث معامل التخميد الدوراني يدويًا
+//  تحديث مقاومة الدوران 
 if (ev.presetKey === 'yawDamping') {
     window.parachute.yawDampingCoeff = ev.value;
-    console.log(`🌀 تم تحديث معامل التخميد الدوراني يدويًا إلى: ${ev.value}`);
+    console.log(`🌀 تم تحديث مقاومة الدوران إلى: ${ev.value}`);
 }
-  // تحديث الرياح على المحور الشرقي/الغربي (X-axis)
+  // تحديث الرياح
   if (ev.presetKey === 'windX') {
     window.parachute.wind.x = ev.value;
     console.log(`💨 قوة الرياح على محور X: ${ev.value} نيوتن`);
   }
-  
-  // تحديث الرياح على المحور الشمالي/الجنوبي (Z-axis)
   if (ev.presetKey === 'windZ') {
     window.parachute.wind.z = ev.value;
     console.log(`💨 قوة الرياح على محور Z: ${ev.value} نيوتن`);
   }
-
-
-  // 🆕 جديد: تحديث شد الحبل الأيسر
+  // تحديث شد الحبل الأيسر
   if (ev.presetKey === 'tensionLeft') {
     window.parachute.tensionLeft = ev.value;
     console.log(`⬅️ شد الحبل الأيسر: ${ev.value} نيوتن`);
   }
 
-  // 🆕 جديد: تحديث شد الحبل الأيمن
+  //  تحديث شد الحبل الأيمن
   if (ev.presetKey === 'tensionRight') {
     window.parachute.tensionRight = ev.value;
     console.log(`➡️ شد الحبل الأيمن: ${ev.value} نيوتن`);
   }
 
-  // 🆕 جديد: تحديث نوع الأرض
+  // تحديث نوع الأرض
   if (ev.presetKey === 'groundType') {
     window.parachute.surfaceType = ev.value;
     console.log(`🌍 تم تحديث نوع الأرض إلى: ${ev.value}`);
   }
 });
-
-// add something
 let planeModel = null;
 let pilotModel = null;
 let pilotArmsModel = null;
@@ -166,7 +153,7 @@ let groundLevel = -30000;
 
 let currentCameraTarget = "helicopter";
 
-// add plane model
+// plane model
 const loader = new GLTFLoader();
 
 loader.load("/models/helicopter.glb", (gltf) => {
@@ -208,7 +195,7 @@ loader.load("/models/PILOT_ARMS_LEGS.glb", (gltf) => {
   scene.add(pilotArmsLegsModel);
 });
 
-// draw parachute
+// parachute
 function createParachute(x_val, y_val) {
   const object = new THREE.Group();
 
@@ -261,7 +248,7 @@ function createParachute(x_val, y_val) {
   return object;
 }
 
-// draw landing box
+// landing box
 function createLandingBox(filler_type) {
   const boxGroup = new THREE.Group();
   const boxMaterial = new THREE.MeshStandardMaterial({ color: 0x8b4513 });
@@ -330,7 +317,7 @@ function createLandingBox(filler_type) {
   return boxGroup;
 }
 
-// function to update landing box
+//update landing box
 function updateLandingBox() {
   if (PARAMS.groundType === "hard" || PARAMS.groundType === "sand") {
     groundLevel = -29985;
@@ -341,7 +328,6 @@ function updateLandingBox() {
   if (landingBox && pilotModel) {
     landingBox.position.set(pilotModel.position.x, -30000, pilotModel.position.z);
   }
-  // remove old one
   if (landingBox && currentLandingBoxType != PARAMS.groundType) {
     scene.remove(landingBox);
     landingBox.traverse((child) => {
@@ -352,7 +338,6 @@ function updateLandingBox() {
     });
     landingBox = null;
   } else if (!landingBox) {
-    // create new one
     landingBox = createLandingBox(PARAMS.groundType);
     currentLandingBoxType = PARAMS.groundType;
     if (landingBox) {
@@ -365,7 +350,7 @@ function updateLandingBox() {
 
 updateLandingBox();
 
-// add light
+// light
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
 scene.add(ambientLight);
 
@@ -376,7 +361,7 @@ scene.add(ambientLight);
 const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
 directionalLight.position.set(1000, groundLevel + PARAMS["airplaneHeight"] + 1000, 1000);
 scene.add(directionalLight);
-// initialize the camera
+// camera
 const camera = new THREE.PerspectiveCamera(
   75,
   window.innerWidth / window.innerHeight,
@@ -410,16 +395,15 @@ function createInfoPanel(text, topPosition) {
       return div;
   }
 
-// استخدام الدالة لإنشاء اللوحات
 const altitudeDiv = createInfoPanel("Height: 0 m", 20);
 const velocityDiv = createInfoPanel("Velocity: 0 m/s", 60);
 const accelerationDiv = createInfoPanel("Acceleration: 0 m/s²", 100);
-
 const yawDiv = createInfoPanel("Yaw: 0°", 140);
 const posXDiv = createInfoPanel("Pos X: 0.00", 180);
 const posYDiv = createInfoPanel("Pos Y: 0.00", 220);
 const posZDiv = createInfoPanel("Pos Z: 0.00", 260);
-// add resize listener
+
+//  resize 
 window.addEventListener("resize", () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
@@ -430,24 +414,11 @@ let dropSpeed = 50;
 
 let cameraAngle = 0;
 const cameraRadius = 100; 
-
-// add keyboard listener
+//keybord
 window.addEventListener("keydown", (event) => {
     if (!event) {
         return;
     }
-if (ispilotDropping && window.parachute) {
-    // if (event.key === "c") {
-    //     window.parachute.yawDampingCoeff += 0.01;
-    //     yawDampingInput.value = window.parachute.yawDampingCoeff;
-    //     console.log(`🌀 زيادة معامل مقاومة الدوران إلى ${window.parachute.yawDampingCoeff.toFixed(2)}`);
-    // }
-    // if (event.key === "f") {
-    //     window.parachute.yawDampingCoeff = Math.max(0, window.parachute.yawDampingCoeff - 0.01);
-    //     yawDampingInput.value = window.parachute.yawDampingCoeff;
-    //     console.log(`🌀 تقليل معامل مقاومة الدوران إلى ${window.parachute.yawDampingCoeff.toFixed(2)}`);
-    // }
-}
     if (event.key === "s") {
         if (pilotModel && planeModel && !ispilotDropping) {
             ispilotDropping = true;
@@ -464,7 +435,7 @@ if (ispilotDropping && window.parachute) {
     }
 
     if (ispilotDropping && window.parachute) {
-        // مفتاح "1": افتح اليدين
+        //  "1": افتح اليدين
         if (event.key === "1") {
             if (pilotModel.visible) {
                 pilotModel.visible = false;
@@ -477,7 +448,7 @@ if (ispilotDropping && window.parachute) {
             console.log("🤸‍♂️ تم نشر اليدين لزيادة المقاومة.");
         }
 
-        // مفتاح "2": اضمم اليدين
+        //  "2": اضمم اليدين
         if (event.key === "2") {
             if (pilotArmsModel.visible) {
                 pilotArmsModel.visible = false;
@@ -490,7 +461,7 @@ if (ispilotDropping && window.parachute) {
             console.log("🧍‍♂️ تم ضم اليدين لتقليل المقاومة.");
         }
 
-        // مفتاح "3": افتح الأرجل
+        //  "3": افتح الأرجل
         if (event.key === "3") {
             if (pilotModel.visible) {
                 pilotModel.visible = false;
@@ -503,7 +474,7 @@ if (ispilotDropping && window.parachute) {
             console.log("🦵 تم نشر الأرجل لزيادة المقاومة.");
         }
 
-        // مفتاح "4": اضمم الأرجل
+        //  "4": اضمم الأرجل
         if (event.key === "4") {
             if (pilotLegsModel.visible) {
                 pilotLegsModel.visible = false;
@@ -552,8 +523,6 @@ if (ispilotDropping && window.parachute) {
             }
         }
     }
-
-   // main.js file
 if (event.key === "h") {
     dropSpeed = 50;
     if (pilotModel && pilotHasParachute && ispilotDropping) {
