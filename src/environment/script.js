@@ -14,14 +14,13 @@ const textureLoader = new THREE.TextureLoader();
 
 const parachuteTexture = textureLoader.load("textures/parachute.jpg");
 // add skybox
-
-let materialArray = [];
-let texture_ft = new THREE.TextureLoader().load("textures/cubeMap/px.jpg");
-let texture_bk = new THREE.TextureLoader().load("textures/cubeMap/nx.jpg");
-let texture_up = new THREE.TextureLoader().load("textures/cubeMap/py.jpg");
-let texture_dn = new THREE.TextureLoader().load("textures/cubeMap/ny.jpg");
-let texture_rt = new THREE.TextureLoader().load("textures/cubeMap/pz.jpg");
-let texture_lf = new THREE.TextureLoader().load("textures/cubeMap/nz.jpg");
+let materialArray=[];
+let texture_ft = new THREE.TextureLoader().load("textures/cubeMap/px.png");
+let texture_bk = new THREE.TextureLoader().load("textures/cubeMap/nx.png");
+let texture_up = new THREE.TextureLoader().load("textures/cubeMap/py.png");
+let texture_dn = new THREE.TextureLoader().load("textures/cubeMap/ny.png");
+let texture_rt = new THREE.TextureLoader().load("textures/cubeMap/pz.png");
+let texture_lf = new THREE.TextureLoader().load("textures/cubeMap/nz.png");
 
 materialArray.push(new THREE.MeshBasicMaterial({ map: texture_ft }));
 materialArray.push(new THREE.MeshBasicMaterial({ map: texture_bk }));
@@ -32,9 +31,9 @@ materialArray.push(new THREE.MeshBasicMaterial({ map: texture_lf }));
 
 for (let i = 0; i < 6; i++) materialArray[i].side = THREE.BackSide;
 
-let skyboxGeo = new THREE.BoxGeometry(50000, 50000, 50000);
+let skyboxGeo = new THREE.BoxGeometry(60000, 10000, 60000);
 let skybox = new THREE.Mesh(skyboxGeo, materialArray);
-skybox.position.y = -5000;
+skybox.position.y = -25000;
 scene.add(skybox);
 
 let PARAMS = {
@@ -42,7 +41,7 @@ let PARAMS = {
   dragCoeff: 1.2, // typical for a human + parachute
   airplaneHeight: 1500, 
   groundType: "hard", // sand, water, hard
-  ropeStrength: 500, // Newtons before breaking
+//   ropeStrength: 500, // Newtons before breaking
   windX: 0, // 🆕 جديد: قوة الرياح على محور X
   windZ: 0, // 🆕 جديد: قوة الرياح على محور Z
   tensionLeft: 0, // 🆕 جديد: شد الحبل الأيسر
@@ -63,7 +62,7 @@ pane.addInput(PARAMS, "skydiverMass", { min: 60, max: 114, step: 1 })
 pane.addInput(PARAMS, "dragCoeff", { min: 0.5, max: 2.5, step: 0.01 });
 
 // Airplane height
-pane.addInput(PARAMS, "airplaneHeight", { min: 2500, max: 14000, step: 100 });
+pane.addInput(PARAMS, "airplaneHeight", { min:2000, max: 4000, step: 100 });
 
 // Ground type
 pane.addInput(PARAMS, "groundType", {
@@ -74,8 +73,12 @@ pane.addInput(PARAMS, "groundType", {
   },
 });
 
-// Rope tensile strength
-pane.addInput(PARAMS, "ropeStrength", { min: 100, max: 2000, step: 10 });
+const yawDampingInput = pane.addInput(PARAMS, "yawDamping", {
+    min: 0.0,
+    max: 2.0,
+    step: 0.01
+});
+
 
 //  تعديل: تحكم مباشر بقوة الرياح على المحورين X و Z
 // Wind on X-axis (East/West)
@@ -86,88 +89,31 @@ pane.addInput(PARAMS, "windZ", { min: -80, max: 80, step: 1, label: 'Wind Z (N/S
 
 
 //تحكم بشد الحبل الأيسر
-pane.addInput(PARAMS, "tensionLeft", { min: 0, max: 200, step: 1, label: 'Tension Left' });
+pane.addInput(PARAMS, "tensionLeft", { min: 0, max: 50, step: 1, label: 'Tension Left' });
 
 //  تحكم بشد الحبل الأيمن
-pane.addInput(PARAMS, "tensionRight", { min: 0, max: 200, step: 1, label: 'Tension Right' });
+pane.addInput(PARAMS, "tensionRight", { min: 0, max: 50, step: 1, label: 'Tension Right' });
 
-// Yaw damping coefficient
-pane.addInput(PARAMS, "yawDamping", { min: 0.1, max: 2.0, step: 0.01 });
 
-// 
-pane.addInput(PARAMS, "armLength", { min: 0, max: 1, step: 1 })
-  .on("change", (ev) => {
-    if (window.parachute) {
-      window.parachute.armLength = ev.value;
-      console.log("🦾 تم تغيير طول الذراع إلى ");
-
-      if (ev.value == 1) {
-        if (pilotModel.visible) {
-            pilotModel.visible = false;
-            pilotArmsModel.visible = true;
-        }
-        if (pilotLegsModel.visible) {
-            pilotLegsModel.visible = false;
-            pilotArmsLegsModel.visible = true;
-        }
-        window.parachute.changePosture(1.5);
-        console.log("🤸‍♂️ تم نشر اليدين لزيادة المقاومة.");
-      } else {
-        if (pilotArmsModel.visible) {
-            pilotArmsModel.visible = false;
-            pilotModel.visible = true;
-        }
-        if (pilotArmsLegsModel.visible) {
-            pilotArmsLegsModel.visible = false;
-            pilotLegsModel.visible = true;
-        }
-        window.parachute.changePosture(1.0);
-        console.log("🧍‍♂️ تم ضم اليدين لتقليل المقاومة.");
-      }
-    }
-  });
-  pane.addInput(PARAMS, "legPosture", { min: 0, max: 1, step: 1 })
-  .on("change", (ev) => {
-    if (window.parachute) {
-      window.parachute.legPosture = ev.value;
-      console.log(`🦵 تم تغيير وضعية الأرجل إلى ${ev.value}`);
-
-      // تحديث النموذج المرئي بناءً على وضعية الأرجل
-      if (ev.value == 0) { 
-        // إذا كانت الأيدي مضمومة، افتح الأرجل فقط
-        if (pilotModel.visible) {
-            pilotModel.visible = false;
-            pilotLegsModel.visible = true;
-        }
-        // إذا كانت الأيدي مفتوحة، افتح الأرجل أيضًا
-        else if (pilotArmsModel.visible) {
-            pilotArmsModel.visible = false;
-            pilotArmsLegsModel.visible = true;
-        }
-        window.parachute.changeLegPosture(1.0);
-                console.log("🦿 تم ضم الأرجل لتقليل المقاومة.");
-
-      } else { 
-        // إذا كانت الأيدي مضمومة، اضم الأرجل فقط
-        if (pilotLegsModel.visible) {
-            pilotLegsModel.visible = false;
-            pilotModel.visible = true;
-        }
-        // إذا كانت الأيدي مفتوحة، اضم الأرجل فقط
-        else if (pilotArmsLegsModel.visible) {
-            pilotArmsLegsModel.visible = false;
-            pilotArmsModel.visible = true;
-        }
-        window.parachute.changeLegPosture(1.5);
-                console.log("🦵 تم نشر الأرجل لزيادة المقاومة.");
-
-      }
-    }
-  });
 //  الكود الجديد لربط Tweakpane مع الرياح وشد الحبال
 pane.on('change', (ev) => {
   if (!window.parachute) return;
+// 🆕 ربط معامل التخميد الدوراني بمعامل مقاومة الهواء
+if (ev.presetKey === 'dragCoeff') {
+    window.parachute.dragCoeff = ev.value;
+    const newYawDamping = ev.value * 0.4;
+    window.parachute.yawDampingCoeff = newYawDamping;
+    // تحديث القيمة المعروضة في Tweakpane
+    yawDampingInput.value = newYawDamping;
+    console.log(`💨 تم تحديث معامل مقاومة الهواء إلى: ${ev.value}`);
+    console.log(`🌀 تم تحديث معامل التخميد الدوراني إلى: ${newYawDamping.toFixed(2)}`);
+}
 
+// 🆕 تحديث معامل التخميد الدوراني يدويًا
+if (ev.presetKey === 'yawDamping') {
+    window.parachute.yawDampingCoeff = ev.value;
+    console.log(`🌀 تم تحديث معامل التخميد الدوراني يدويًا إلى: ${ev.value}`);
+}
   // تحديث الرياح على المحور الشرقي/الغربي (X-axis)
   if (ev.presetKey === 'windX') {
     window.parachute.wind.x = ev.value;
@@ -423,10 +369,13 @@ updateLandingBox();
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
 scene.add(ambientLight);
 
-const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-directionalLight.position.set(5, 10, 7.5);
-scene.add(directionalLight);
+// const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+// directionalLight.position.set(5, 10, 7.5);
+// scene.add(directionalLight);
 
+const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+directionalLight.position.set(1000, groundLevel + PARAMS["airplaneHeight"] + 1000, 1000);
+scene.add(directionalLight);
 // initialize the camera
 const camera = new THREE.PerspectiveCamera(
   75,
@@ -443,32 +392,33 @@ const canvas = document.querySelector("canvas.threejs");
 const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-
 function createInfoPanel(text, topPosition) {
-    const div = document.createElement("div");
-    div.style.position = "absolute";
-    div.style.top = `${topPosition}px`;
-    div.style.left = "20px";
-    div.style.padding = "8px 16px";
-    div.style.background = "rgba(45, 45, 45, 0.8)";
-    div.style.color = "#E0E0E0";
-    div.style.fontFamily = "monospace";
-    div.style.fontSize = "16px";
-    div.style.fontWeight = "bold";
-    div.style.borderRadius = "8px";
-    div.style.zIndex = "999";
-    div.innerText = text;
-    document.body.appendChild(div);
-    return div;
-}
+      const div = document.createElement("div");
+      div.style.position = "absolute";
+      div.style.top = `${topPosition}px`;
+      div.style.left = "20px";
+      div.style.padding = "8px 16px";
+      div.style.background = "rgba(45, 45, 45, 0.8)";
+      div.style.color = "#E0E0E0";
+      div.style.fontFamily = "monospace";
+      div.style.fontSize = "16px";
+      div.style.fontWeight = "bold";
+      div.style.borderRadius = "8px";
+      div.style.zIndex = "999";
+      div.innerText = text;
+      document.body.appendChild(div);
+      return div;
+  }
 
 // استخدام الدالة لإنشاء اللوحات
 const altitudeDiv = createInfoPanel("Height: 0 m", 20);
 const velocityDiv = createInfoPanel("Velocity: 0 m/s", 60);
-const yawDiv = createInfoPanel("Yaw: 0°", 100);
-const posXDiv = createInfoPanel("Pos X: 0.00", 140);
-const posYDiv = createInfoPanel("Pos Y: 0.00", 180);
-const posZDiv = createInfoPanel("Pos Z: 0.00", 220);
+const accelerationDiv = createInfoPanel("Acceleration: 0 m/s²", 100);
+
+const yawDiv = createInfoPanel("Yaw: 0°", 140);
+const posXDiv = createInfoPanel("Pos X: 0.00", 180);
+const posYDiv = createInfoPanel("Pos Y: 0.00", 220);
+const posZDiv = createInfoPanel("Pos Z: 0.00", 260);
 // add resize listener
 window.addEventListener("resize", () => {
   camera.aspect = window.innerWidth / window.innerHeight;
@@ -482,237 +432,143 @@ let cameraAngle = 0;
 const cameraRadius = 100; 
 
 // add keyboard listener
-
 window.addEventListener("keydown", (event) => {
-  if (event.key === "s") {
-    if (pilotModel && planeModel && !ispilotDropping) {
-      ispilotDropping = true;
-      pilotModel.visible = true;
-      currentCameraTarget = "pilot";
+    if (!event) {
+        return;
+    }
+if (ispilotDropping && window.parachute) {
+    // if (event.key === "c") {
+    //     window.parachute.yawDampingCoeff += 0.01;
+    //     yawDampingInput.value = window.parachute.yawDampingCoeff;
+    //     console.log(`🌀 زيادة معامل مقاومة الدوران إلى ${window.parachute.yawDampingCoeff.toFixed(2)}`);
+    // }
+    // if (event.key === "f") {
+    //     window.parachute.yawDampingCoeff = Math.max(0, window.parachute.yawDampingCoeff - 0.01);
+    //     yawDampingInput.value = window.parachute.yawDampingCoeff;
+    //     console.log(`🌀 تقليل معامل مقاومة الدوران إلى ${window.parachute.yawDampingCoeff.toFixed(2)}`);
+    // }
+}
+    if (event.key === "s") {
+        if (pilotModel && planeModel && !ispilotDropping) {
+            ispilotDropping = true;
+            pilotModel.visible = true;
+            currentCameraTarget = "pilot";
 
-      if (window.parachute) {
-        window.parachute.position.y = PARAMS["airplaneHeight"];
-        window.isSimulationRunning = true;
-        window.animate();
-        console.log("▶️ بدء المحاكاة");
-      }
-    }
-//  else if (ispilotDropping && window.parachute) {
-//       window.isSimulationRunning = !window.isSimulationRunning;
-//       if (window.isSimulationRunning) {
-//         window.animate();
-//         console.log("▶️ تم استئناف المحاكاة");
-//       } else {
-//         console.log("⏸️ تم إيقاف المحاكاة");
-//       }
-//     }
-  }
+            if (window.parachute) {
+                window.parachute.position.y = PARAMS["airplaneHeight"];
+                window.isSimulationRunning = true;
+                window.animate();
+                console.log("▶️ بدء المحاكاة");
+            }
+        }
+    }
 
-//   if (event.key === "a") {
-  
-//     // open Arms
-//     if (
-//       pilotModel &&
-//       pilotArmsModel &&
-//       planeModel &&
-//       ispilotDropping &&
-//       pilotModel.visible
-//     ) {
-//       pilotModel.visible = false;
-//       pilotArmsModel.visible = true;
-//     } else if (
-//       pilotLegsModel &&
-//       pilotArmsLegsModel &&
-//       planeModel &&
-//       ispilotDropping &&
-//       pilotLegsModel.visible
-//     ) {
-//       pilotLegsModel.visible = false;
-//       pilotArmsLegsModel.visible = true;
-//     }
-//   }
+    if (ispilotDropping && window.parachute) {
+        // مفتاح "1": افتح اليدين
+        if (event.key === "1") {
+            if (pilotModel.visible) {
+                pilotModel.visible = false;
+                pilotArmsModel.visible = true;
+            } else if (pilotLegsModel.visible) {
+                pilotLegsModel.visible = false;
+                pilotArmsLegsModel.visible = true;
+            }
+            window.parachute.changePosture(1.5);
+            console.log("🤸‍♂️ تم نشر اليدين لزيادة المقاومة.");
+        }
 
-//   if (event.key === "c") {
-//     // close Arms
-//     if (
-//       pilotModel &&
-//       pilotArmsModel &&
-//       planeModel &&
-//       ispilotDropping &&
-//       pilotArmsModel.visible
-//     ) {
-//       pilotModel.visible = true;
-//       pilotArmsModel.visible = false;
-//     } else if (
-//       pilotLegsModel &&
-//       pilotArmsLegsModel &&
-//       planeModel &&
-//       ispilotDropping &&
-//       pilotArmsLegsModel.visible
-//     ) {
-//       pilotLegsModel.visible = true;
-//       pilotArmsLegsModel.visible = false;
-//     }
-//   }
+        // مفتاح "2": اضمم اليدين
+        if (event.key === "2") {
+            if (pilotArmsModel.visible) {
+                pilotArmsModel.visible = false;
+                pilotModel.visible = true;
+            } else if (pilotArmsLegsModel.visible) {
+                pilotArmsLegsModel.visible = false;
+                pilotLegsModel.visible = true;
+            }
+            window.parachute.changePosture(1.0);
+            console.log("🧍‍♂️ تم ضم اليدين لتقليل المقاومة.");
+        }
 
+        // مفتاح "3": افتح الأرجل
+        if (event.key === "3") {
+            if (pilotModel.visible) {
+                pilotModel.visible = false;
+                pilotLegsModel.visible = true;
+            } else if (pilotArmsModel.visible) {
+                pilotArmsModel.visible = false;
+                pilotArmsLegsModel.visible = true;
+            }
+            window.parachute.changeLegPosture(1.5);
+            console.log("🦵 تم نشر الأرجل لزيادة المقاومة.");
+        }
 
-//   if (event.key === "l" && ispilotDropping) {
-//     // open legs
-//     if (
-//       pilotModel &&
-//       pilotLegsModel &&
-//       planeModel &&
-//       ispilotDropping &&
-//       pilotModel.visible
-//     ) {
-//       pilotModel.visible = false;
-//       pilotLegsModel.visible = true;
-//     } else if (
-//       pilotModel &&
-//       pilotArmsLegsModel &&
-//       planeModel &&
-//       ispilotDropping &&
-//       pilotArmsModel.visible
-//     ) {
-//       pilotArmsModel.visible = false;
-//       pilotArmsLegsModel.visible = true;
-//     }
-//   }
-// if (event.key === "l" && ispilotDropping) {
-//     if (window.parachute) {
-//       if (pilotModel.visible) {
-//         pilotModel.visible = false;
-//         pilotLegsModel.visible = true;
-//         window.parachute.changeLegPosture(1.5);
-//         console.log("🦵 تم نشر الأرجل. (وضعية أكبر تزيد مقاومة الهواء)");
-//       } 
-//       else if (pilotArmsModel.visible) {
-//         pilotArmsModel.visible = false;
-//         pilotArmsLegsModel.visible = true;
-//         // تحديث وضعية الأرجل في الفيزياء لزيادة المقاومة
-//         window.parachute.changeLegPosture(1.5);
-//         console.log("🦵 تم نشر الأرجل. (وضعية أكبر تزيد مقاومة الهواء)");
-//       }
-//     }
-//   }
+        // مفتاح "4": اضمم الأرجل
+        if (event.key === "4") {
+            if (pilotLegsModel.visible) {
+                pilotLegsModel.visible = false;
+                pilotModel.visible = true;
+            } else if (pilotArmsLegsModel.visible) {
+                pilotArmsLegsModel.visible = false;
+                pilotArmsModel.visible = true;
+            }
+            window.parachute.changeLegPosture(1.0);
+            console.log("🦿 تم ضم الأرجل لتقليل المقاومة.");
+        }
+    }
 
-//   if (event.key === "x") {
-//     // close Legs
-//     if (
-//       pilotModel &&
-//       pilotLegsModel &&
-//       planeModel &&
-//       ispilotDropping &&
-//       pilotLegsModel.visible
-//     ) {
-//       pilotModel.visible = true;
-//       pilotLegsModel.visible = false;
-//     } else if (
-//       pilotModel &&
-//       pilotArmsLegsModel &&
-//       planeModel &&
-//       ispilotDropping &&
-//       pilotArmsLegsModel.visible
-//     ) {
-//       pilotArmsModel.visible = true;
-//       pilotArmsLegsModel.visible = false;
-//     }
-//   }
-// if (event.key === "x") {
-//     if (ispilotDropping && window.parachute) {
-//       if (pilotLegsModel.visible) {
-//         pilotLegsModel.visible = false;
-//         pilotModel.visible = true;
-//         window.parachute.changeLegPosture(1.0);
-//         console.log("🦿 تم ضم الأرجل. (وضعية أصغر تقلل مقاومة الهواء)");
-//       } 
-//       else if (pilotArmsLegsModel.visible) {
-//         pilotArmsLegsModel.visible = false;
-//         pilotArmsModel.visible = true;
-//         // تحديث وضعية الأرجل في الفيزياء لتقليل المقاومة
-//         window.parachute.changeLegPosture(1.0);
-//         console.log("🦿 تم ضم الأرجل. (وضعية أصغر تقلل مقاومة الهواء)");
-//       }
-//     }
-//   }
+    if (event.key === "o") {
+        dropSpeed = 10;
+        if (pilotModel && !pilotHasParachute && ispilotDropping) {
+            const parachute_1 = createParachute(0.4, 2.1);
+            parachute_1.position.set(0, 3.2, 0);
+            parachute_1.scale.setScalar(1.1);
+            pilotModel.add(parachute_1);
 
-//   if (event.key === "o") {
-//     dropSpeed = 10;
-//     if (pilotModel && !pilotHasParachute && ispilotDropping) {
-//       const parachute_1 = createParachute(0.4, 2.1);
-//       parachute_1.position.set(0, 3.2, 0);
-//       parachute_1.scale.setScalar(1.1);
-//       pilotModel.add(parachute_1);
+            const parachute_3 = createParachute(0.4, 2.1);
+            parachute_3.position.set(0, 3.2, 0);
+            parachute_3.scale.setScalar(1.1);
+            pilotLegsModel.add(parachute_3);
 
-//       const parachute_3 = createParachute(0.4, 2.1);
-//       parachute_3.position.set(0, 3.2, 0);
-//       parachute_3.scale.setScalar(1.1);
-//       pilotLegsModel.add(parachute_3);
+            const parachute_2 = createParachute(0.8, 2.1);
+            parachute_2.position.set(0, 3.9, 0);
+            parachute_2.scale.setScalar(1.1);
+            pilotArmsModel.add(parachute_2);
 
-//       const parachute_2 = createParachute(0.8, 2.1);
-//       parachute_2.position.set(0, 3.9, 0);
-//       parachute_2.scale.setScalar(1.1);
-//       pilotArmsModel.add(parachute_2);
+            const parachute_4 = createParachute(0.8, 2.1);
+            parachute_4.position.set(0, 3.4, 0);
+            parachute_4.scale.setScalar(1.1);
+            pilotArmsLegsModel.add(parachute_4);
 
-//       const parachute_4 = createParachute(0.8, 2.1);
-//       parachute_4.position.set(0, 3.4, 0);
-//       parachute_4.scale.setScalar(1.1);
-//       pilotArmsLegsModel.add(parachute_4);
+            pilotHasParachute = true;
+            parachute_1_Model = parachute_1;
+            parachute_2_Model = parachute_2;
+            parachute_3_Model = parachute_3;
+            parachute_4_Model = parachute_4;
 
-//       pilotHasParachute = true;
-//       parachute_1_Model = parachute_1;
-//       parachute_2_Model = parachute_2;
-//       parachute_3_Model = parachute_3;
-//       parachute_4_Model = parachute_4;
-//     }
-//   }
-if (event.key === "o") {
-    dropSpeed = 10;
-    if (pilotModel && !pilotHasParachute && ispilotDropping) {
-      const parachute_1 = createParachute(0.4, 2.1);
-      parachute_1.position.set(0, 3.2, 0);
-      parachute_1.scale.setScalar(1.1);
-      pilotModel.add(parachute_1);
+            if (window.parachute) {
+                window.parachute.isParachuteOpen = true;
+                console.log("🪂 تم فتح المظلة في المحاكاة الفيزيائية");
+            }
+        }
+    }
 
-      const parachute_3 = createParachute(0.4, 2.1);
-      parachute_3.position.set(0, 3.2, 0);
-      parachute_3.scale.setScalar(1.1);
-      pilotLegsModel.add(parachute_3);
-
-      const parachute_2 = createParachute(0.8, 2.1);
-      parachute_2.position.set(0, 3.9, 0);
-      parachute_2.scale.setScalar(1.1);
-      pilotArmsModel.add(parachute_2);
-
-      const parachute_4 = createParachute(0.8, 2.1);
-      parachute_4.position.set(0, 3.4, 0);
-      parachute_4.scale.setScalar(1.1);
-      pilotArmsLegsModel.add(parachute_4);
-
-      pilotHasParachute = true;
-      parachute_1_Model = parachute_1;
-      parachute_2_Model = parachute_2;
-      parachute_3_Model = parachute_3;
-      parachute_4_Model = parachute_4;
-      
-      if (window.parachute) {
-        window.parachute.isParachuteOpen = true;
-        console.log("🪂 تم فتح المظلة في المحاكاة الفيزيائية");
-      }
-    }
-  }
-
-
-  if (event.key === "h") {
-    dropSpeed = 50;
-    if (pilotModel && pilotHasParachute && ispilotDropping) {
-      pilotHasParachute = false;
-      parachute_1_Model.visible = false;
-      parachute_2_Model.visible = false;
-      parachute_3_Model.visible = false;
-      parachute_4_Model.visible = false;
-    }
-  }
+   // main.js file
+if (event.key === "h") {
+    dropSpeed = 50;
+    if (pilotModel && pilotHasParachute && ispilotDropping) {
+        pilotHasParachute = false;
+        parachute_1_Model.visible = false;
+        parachute_2_Model.visible = false;
+        parachute_3_Model.visible = false;
+        parachute_4_Model.visible = false;
+        
+        if (window.parachute) {
+            window.parachute.isParachuteOpen = false;
+            console.log("🎒 تم إغلاق المظلة في المحاكاة الفيزيائية");
+        }
+    }
+}
 });
 
 const cursor = {
@@ -827,9 +683,9 @@ if (pilotModel) {
   altitudeDiv.innerText = `hight: ${altitude} m`;
 }
   if (window.parachute) {
-    const velocityY = window.parachute.velocity.y.toFixed(2); 
+const accelerationY = window.parachute.acceleration.y; const velocityY = window.parachute.velocity.y.toFixed(2); 
     velocityDiv.innerText = `Velocity: ${-velocityY} m/s`;
- const posX = window.parachute.position.x.toFixed(2);
+accelerationDiv.innerText = `Acceleration: ${accelerationY.toFixed(2)} m/s²`; const posX = window.parachute.position.x.toFixed(2);
  const posY = window.parachute.position.y.toFixed(2);
     const posZ = window.parachute.position.z.toFixed(2);
     posXDiv.innerText = `Pos X: ${posX}`;
