@@ -11,7 +11,7 @@ export const COLLISION_DELTA_TIME = 0.2; // seconds
 // معامل كتلة الدوران التقريبي لجسم بشري (لعزم الدوران)
 export const MOMENT_OF_INERTIA = 20; // kg·m² (تقريبي جداً)
 
-// أقصى قوة شد ممكنة للحبال قبل الانقطاع (للتجريب)
+// أقصى قوة شد ممكنة للحبال قبل الانقطاع)
 export const MAX_TENSION_FORCE = 5000; // Newtons
 
 // معامل الاحتكاك الأرضي (لو في احتكاك عند التصادم)
