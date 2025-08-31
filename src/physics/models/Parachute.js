@@ -47,10 +47,10 @@ export class Parachute {
      this.wind = options.wind || new Vector3(0, 0, 0);
  }
 
-  dynamicAirDensity() {
-    const scaleHeight = 8500; // meters
-    return AIR_DENSITY_SEA_LEVEL * Math.exp(-this.position.y / scaleHeight);
-  }
+  // dynamicAirDensity() {
+  //   const scaleHeight = 8500; // meters
+  //   return AIR_DENSITY_SEA_LEVEL * Math.exp(-this.position.y / scaleHeight);
+  // }
 
   gravityForce() {
     return new Vector3(0, -this.mass * this.gravity, 0);
@@ -62,7 +62,8 @@ dragForce() {
     const speed = relativeVelocity.magnitude();
     const baseArea = this.isParachuteOpen ? this.openArea : this.closedArea;
     const area = baseArea * this.bodyPostureFactor * this.legPostureFactor;
-    const rho = this.dynamicAirDensity();
+   // const rho = this.dynamicAirDensity();
+   const rho = AIR_DENSITY_SEA_LEVEL;
     const dragMagnitude = 0.5 * rho * this.dragCoeff * area * speed * speed;
 
     const dragDirection = speed === 0
