@@ -93,10 +93,10 @@ pane.addInput(PARAMS, "openParachuteArea", {
 
 //  تعديل: تحكم مباشر بقوة الرياح على المحورين X و Z
 // Wind on X-axis (East/West)
-pane.addInput(PARAMS, "windX", { min: -80, max: 80, step: 1, label: 'Wind X (E/W)' });
+pane.addInput(PARAMS, "windX", { min: -80, max: 80, step: 1, label: 'Wind X(E/W)' });
 
 // Wind on Z-axis (North/South)
-pane.addInput(PARAMS, "windZ", { min: -80, max: 80, step: 1, label: 'Wind Z (N/S)' });
+pane.addInput(PARAMS, "windZ", { min: -80, max: 80, step: 1, label: 'Wind Z(N/S)' });
 
 
 //تحكم بشد الحبل الأيسر
