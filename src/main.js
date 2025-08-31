@@ -15,34 +15,34 @@ const parachute = new Parachute({
 });
 window.parachute = parachute;
 
-window.addEventListener("keydown", (event) => {
-  switch (event.key) {
-//     case "q":
-//       parachute.tensionLeft += 50;
-//       console.log(`⬅️ زيادة الشد في الجهة اليسرى إلى ${parachute.tensionLeft} نيوتن`);
-//       break;
-//     case "e":
-//       parachute.tensionRight += 50;
-//       console.log(`➡️ زيادة الشد في الجهة اليمنى إلى ${parachute.tensionRight} نيوتن`);
-//       break;
-//     case "a":
-//       parachute.tensionLeft = Math.max(0, parachute.tensionLeft - 50);
-//       console.log(`⬅️ تقليل الشد في الجهة اليسرى إلى ${parachute.tensionLeft} نيوتن`);
-//       break;
-//     case "d":
-//       parachute.tensionRight = Math.max(0, parachute.tensionRight - 50);
-//       console.log(`➡️ تقليل الشد في الجهة اليمنى إلى ${parachute.tensionRight} نيوتن`);
-//       break;
-//     case "c":
-//       parachute.yawDampingCoeff += 0.01;
-//       console.log(`🌀 زيادة معامل مقاومة الدوران إلى ${parachute.yawDampingCoeff.toFixed(2)}`);
-//       break;
-//     case "f":
-//       parachute.yawDampingCoeff = Math.max(0, parachute.yawDampingCoeff - 0.01);
-//       console.log(`🌀 تقليل معامل مقاومة الدوران إلى ${parachute.yawDampingCoeff.toFixed(2)}`);
-//       break;
-  }
-});
+// window.addEventListener("keydown", (event) => {
+//   switch (event.key) {
+// //     case "q":
+// //       parachute.tensionLeft += 50;
+// //       console.log(`⬅️ زيادة الشد في الجهة اليسرى إلى ${parachute.tensionLeft} نيوتن`);
+// //       break;
+// //     case "e":
+// //       parachute.tensionRight += 50;
+// //       console.log(`➡️ زيادة الشد في الجهة اليمنى إلى ${parachute.tensionRight} نيوتن`);
+// //       break;
+// //     case "a":
+// //       parachute.tensionLeft = Math.max(0, parachute.tensionLeft - 50);
+// //       console.log(`⬅️ تقليل الشد في الجهة اليسرى إلى ${parachute.tensionLeft} نيوتن`);
+// //       break;
+// //     case "d":
+// //       parachute.tensionRight = Math.max(0, parachute.tensionRight - 50);
+// //       console.log(`➡️ تقليل الشد في الجهة اليمنى إلى ${parachute.tensionRight} نيوتن`);
+// //       break;
+// //     case "c":
+// //       parachute.yawDampingCoeff += 0.01;
+// //       console.log(`🌀 زيادة معامل مقاومة الدوران إلى ${parachute.yawDampingCoeff.toFixed(2)}`);
+// //       break;
+// //     case "f":
+// //       parachute.yawDampingCoeff = Math.max(0, parachute.yawDampingCoeff - 0.01);
+// //       console.log(`🌀 تقليل معامل مقاومة الدوران إلى ${parachute.yawDampingCoeff.toFixed(2)}`);
+// //       break;
+//   }
+// });
 
 function animate() {
   if (!window.isSimulationRunning) return;

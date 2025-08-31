@@ -888,7 +888,8 @@ const renderloop = () => {
 
         infoElements.altitude.innerText = `${altitude}`;
         infoElements.velocity.innerText = `${-velocityY}`;
-        infoElements.acceleration.innerText = `${-accelerationY.toFixed(2)}`;
+        // infoElements.acceleration.innerText = `${-accelerationY.toFixed(2)}`;
+        infoElements.acceleration.innerText = `${Math.abs(accelerationY).toFixed(2)}`;
         infoElements.posX.innerText = `${posX}`;
         infoElements.posY.innerText = `${posY}`;
         infoElements.posZ.innerText = `${posZ}`;
