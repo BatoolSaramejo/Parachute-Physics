@@ -360,10 +360,12 @@ export class Parachute {
   torqueForce() {
     const tensionDiff = this.tensionLeft - this.tensionRight;
 
+    // 🔹 تعديل جديد: خفض activeTorqueY إلى 0.0005 عشان دوران أضعف جدًا حول Y
     const activeTorqueY = tensionDiff * this.armLength * 0.0005;
     const rollTorque = tensionDiff * 0.01;
     const pitchTorque = tensionDiff * 0.005;
 
+    // 🔹 التخميد
     const dynamicDampingCoeff = this.yawDampingCoeff * (this.isParachuteOpen ? 3 : 1) * this.bodyPostureFactor;
     const dampingTorque = this.angularVelocity.scale(-dynamicDampingCoeff);
 
@@ -377,12 +379,14 @@ export class Parachute {
       pitchTorque + restoringTorqueZ + dampingTorque.z
     );
 
-    if (Math.abs(tensionDiff) < 0.05 && !this.hasStoppedRotation) {
+    // 🔹 تعديل جديد: إيقاف الدوران إذا كان tensionDiff صغير جدًا
+    if (Math.abs(tensionDiff) < 0.05 && !this.hasStoppedRotation) { // خفض من 0.1 إلى 0.05
       this.angularVelocity = new Vector3(0, 0, 0);
+      this.orientation = new Vector3(this.orientation.x * 0.5, 0, this.orientation.z * 0.5); // 🔹 إعادة تعيين orientation.y وتخفيف x/z
       console.log('✅ توقف الدوران بسبب شد متساوي تقريبًا');
       this.hasStoppedRotation = true;
     } else if (Math.abs(tensionDiff) >= 0.05) {
-      this.hasStoppedRotation = false;
+      this  .hasStoppedRotation = false;
     }
 
     return netTorque;
@@ -442,8 +446,10 @@ export class Parachute {
   }
 
   update(dt) {
-    const cappedDt = Math.min(dt, 0.1);
+    // 🔹 تعديل جديد: تحديد dt عشان نمنع تقلبات كبيرة
+    const cappedDt = Math.min(dt, 0.1); // سقف للـ dt
 
+    // 1️⃣ حساب العزم (Torque)
     const torque = this.torqueForce();
     const tensionDiff = this.tensionLeft - this.tensionRight;
 
@@ -453,34 +459,42 @@ export class Parachute {
       this.angularAcceleration.y = 0;
     }
 
+    // 3️⃣ تحديث السرعة الزاوية (Angular Velocity)
     this.angularVelocity = this.angularVelocity.add(this.angularAcceleration.scale(cappedDt));
 
-    const maxAngularVelocity = 0.1;
+    // 🔹 تعديل جديد: سقف للسرعة الزاوية عشان نمنع دوران سريع (يويو)
+    const maxAngularVelocity = 0.1; // rad/s
     if (Math.abs(this.angularVelocity.y) > maxAngularVelocity) {
       this.angularVelocity.y = Math.sign(this.angularVelocity.y) * maxAngularVelocity;
     }
 
-    const dampingFactor = 0.999;
+    // 🔹 تعديل جديد: تخميد أقوى جدًا
+    const dampingFactor = 0.999; // زيادة من 0.995 إلى 0.999
     this.angularVelocity = this.angularVelocity.scale(dampingFactor);
 
-    if (this.angularVelocity.magnitude() < 0.0005 && Math.abs(tensionDiff) < 0.05) {
+    // 🔹 تعديل جديد: إذا السرعة الزاوية صغيرة جدًا و tensionDiff صغير، أوقفها
+    if (this.angularVelocity.magnitude() < 0.0005 && Math.abs(this.tensionLeft - this.tensionRight) < 0.05) {
       this.angularVelocity = new Vector3(0, 0, 0);
     }
 
+    // 4️⃣ تحديث الزاوية (Orientation)
     this.orientation = this.orientation.add(this.angularVelocity.scale(cappedDt));
     if (Math.abs(this.orientation.y) < 0.01 && Math.abs(tensionDiff) < 0.05) {
       this.orientation.y = 0;
     }
     this.orientation.y = (this.orientation.y + Math.PI * 2) % (Math.PI * 2);
 
+    // 5️⃣ تحديث القوى الخطية (Linear Forces)
     this.acceleration = this.accelerationVector();
 
+    // 6️⃣ كشف السرعة الحدية (Terminal Velocity)
     const accelerationMagnitude = this.acceleration.magnitude();
     if (!this.reachedTerminalVelocity && accelerationMagnitude < 0.01) {
       console.log('✅ تم الوصول للسرعة الحدية');
       this.reachedTerminalVelocity = true;
     }
 
+    // 7️⃣ تحديث السرعة الخطية (Linear Velocity)
     this.velocity = this.velocity.add(this.acceleration.scale(cappedDt));
 
     // تخميد للسرعة الأفقية
@@ -497,6 +511,7 @@ export class Parachute {
     this.yawAngle = this.orientation.y * (180 / Math.PI) % 360;
     if (this.yawAngle < 0) this.yawAngle += 360;
 
+    // 🔟 إذا وصلت الأرض
     if (this.position.y <= 0) {
       this.position.y = 0;
 
@@ -509,7 +524,7 @@ export class Parachute {
       }
 
       this.angularVelocity = new Vector3(0, 0, 0);
-      this.orientation = new Vector3(0, 0, 0);
+      this.orientation = new Vector3(0, 0, 0); // 🔹 إعادة تعيين كل الزوايا
       this.yawAngle = 0;
       this.hasStoppedRotation = false;
       console.log("✅ هبوط ناجح - تم التوقف");
