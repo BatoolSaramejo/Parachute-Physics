@@ -315,9 +315,9 @@ function createLandingBox(filler_type) {
   fillerGeometry.setAttribute('uv2', uv2fillerGeometry);
 
   let fillerMaterial = null;
-  if (filler_type === "water") {
+if (filler_type === "water") {
     fillerMaterial = new THREE.MeshStandardMaterial({ color: 0x1e90ff, transparent: true, opacity: 0.7 });
-  } else if (filler_type === "sand") {
+  }else if (filler_type === "sand") {
     fillerMaterial = new THREE.MeshStandardMaterial({ color: 0xd2b48c });
   } else if (filler_type === "hard") {
     fillerMaterial = new THREE.MeshStandardMaterial({ color: 0x555555 });
