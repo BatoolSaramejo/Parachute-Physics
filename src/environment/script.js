@@ -75,13 +75,13 @@ pane.addInput(PARAMS, "groundType", {
 
 const yawDampingInput = pane.addInput(PARAMS, "yawDamping", {
     min: 0.0,
-    max: 2.0,
+    max:60 ,
     step: 0.01
 });
 
 pane.addInput(PARAMS, "openParachuteArea", {
-    min: 10,
-    max: 100,
+    min: 20,
+    max: 60,
     step: 1
 })
 .on("change", (ev) => {
