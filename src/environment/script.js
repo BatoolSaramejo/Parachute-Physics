@@ -42,13 +42,14 @@ let PARAMS = {
   airplaneHeight: 1500, 
   groundType: "hard", // sand, water, hard
 //   ropeStrength: 500, // Newtons before breaking
-  windX: 0, // قوة الرياح على محور X
-  windZ: 0, // قوة الرياح على محور Z
-  tensionLeft: 0, //  شد الحبل الأيسر
-  tensionRight: 0, //  شد الحبل الأيمن
-  yawDamping: 0.5,
-  armLength: 1, 
+  windX: 0, // 🆕 جديد: قوة الرياح على محور X
+  windZ: 0, // 🆕 جديد: قوة الرياح على محور Z
+  tensionLeft: 0, // 🆕 جديد: شد الحبل الأيسر
+  tensionRight: 0, // 🆕 جديد: شد الحبل الأيمن
+  yawDamping: 0.5, // arbitrary damping factor
+  armLength: 1, // meters
   legPosture: 0, 
+  openParachuteArea: 15,
 };
 
 //skydiverMass
@@ -68,7 +69,6 @@ pane.addInput(PARAMS, "airplaneHeight", { min:2000, max: 4000, step: 100 });
 pane.addInput(PARAMS, "groundType", {
   options: {
     Sand: "sand",
-    Water: "water",
     "Hard Ground": "hard",
   },
 });
@@ -78,11 +78,26 @@ const yawDampingInput = pane.addInput(PARAMS, "yawDamping", {
     max: 2.0,
     step: 0.01
 });
-// Wind 
+
+pane.addInput(PARAMS, "openParachuteArea", {
+    min: 10,
+    max: 100,
+    step: 1
+})
+.on("change", (ev) => {
+    if (window.parachute) {
+        window.parachute.openArea = ev.value;
+        console.log(`🪂 تم تغيير مساحة المظلة المفتوحة إلى ${ev.value} متر مربع`);
+    }
+});
+
+//  تعديل: تحكم مباشر بقوة الرياح على المحورين X و Z
+// Wind on X-axis (East/West)
 pane.addInput(PARAMS, "windX", { min: -80, max: 80, step: 1, label: 'Wind X (E/W)' });
 
-// Wind 
+// Wind on Z-axis (North/South)
 pane.addInput(PARAMS, "windZ", { min: -80, max: 80, step: 1, label: 'Wind Z (N/S)' });
+
 
 //تحكم بشد الحبل الأيسر
 pane.addInput(PARAMS, "tensionLeft", { min: 0, max: 50, step: 1, label: 'Tension Left' });
@@ -90,50 +105,59 @@ pane.addInput(PARAMS, "tensionLeft", { min: 0, max: 50, step: 1, label: 'Tension
 //  تحكم بشد الحبل الأيمن
 pane.addInput(PARAMS, "tensionRight", { min: 0, max: 50, step: 1, label: 'Tension Right' });
 
+
+//  الكود الجديد لربط Tweakpane مع الرياح وشد الحبال
 pane.on('change', (ev) => {
   if (!window.parachute) return;
-//  ربط مقاومة الدوران ب مقاومة الهواء
+// 🆕 ربط معامل التخميد الدوراني بمعامل مقاومة الهواء
 if (ev.presetKey === 'dragCoeff') {
     window.parachute.dragCoeff = ev.value;
     const newYawDamping = ev.value * 0.4;
     window.parachute.yawDampingCoeff = newYawDamping;
+    // تحديث القيمة المعروضة في Tweakpane
     yawDampingInput.value = newYawDamping;
     console.log(`💨 تم تحديث معامل مقاومة الهواء إلى: ${ev.value}`);
     console.log(`🌀 تم تحديث معامل التخميد الدوراني إلى: ${newYawDamping.toFixed(2)}`);
 }
 
-//  تحديث مقاومة الدوران 
+// 🆕 تحديث معامل التخميد الدوراني يدويًا
 if (ev.presetKey === 'yawDamping') {
     window.parachute.yawDampingCoeff = ev.value;
-    console.log(`🌀 تم تحديث مقاومة الدوران إلى: ${ev.value}`);
+    console.log(`🌀 تم تحديث معامل التخميد الدوراني يدويًا إلى: ${ev.value}`);
 }
-  // تحديث الرياح
+  // تحديث الرياح على المحور الشرقي/الغربي (X-axis)
   if (ev.presetKey === 'windX') {
     window.parachute.wind.x = ev.value;
     console.log(`💨 قوة الرياح على محور X: ${ev.value} نيوتن`);
   }
+  
+  // تحديث الرياح على المحور الشمالي/الجنوبي (Z-axis)
   if (ev.presetKey === 'windZ') {
     window.parachute.wind.z = ev.value;
     console.log(`💨 قوة الرياح على محور Z: ${ev.value} نيوتن`);
   }
-  // تحديث شد الحبل الأيسر
+
+
+  // 🆕 جديد: تحديث شد الحبل الأيسر
   if (ev.presetKey === 'tensionLeft') {
     window.parachute.tensionLeft = ev.value;
     console.log(`⬅️ شد الحبل الأيسر: ${ev.value} نيوتن`);
   }
 
-  //  تحديث شد الحبل الأيمن
+  // 🆕 جديد: تحديث شد الحبل الأيمن
   if (ev.presetKey === 'tensionRight') {
     window.parachute.tensionRight = ev.value;
     console.log(`➡️ شد الحبل الأيمن: ${ev.value} نيوتن`);
   }
 
-  // تحديث نوع الأرض
+  // 🆕 جديد: تحديث نوع الأرض
   if (ev.presetKey === 'groundType') {
     window.parachute.surfaceType = ev.value;
     console.log(`🌍 تم تحديث نوع الأرض إلى: ${ev.value}`);
   }
 });
+
+// add something
 let planeModel = null;
 let pilotModel = null;
 let pilotArmsModel = null;
@@ -153,7 +177,7 @@ let groundLevel = -30000;
 
 let currentCameraTarget = "helicopter";
 
-// plane model
+// add plane model
 const loader = new GLTFLoader();
 
 loader.load("/models/helicopter.glb", (gltf) => {
@@ -195,7 +219,7 @@ loader.load("/models/PILOT_ARMS_LEGS.glb", (gltf) => {
   scene.add(pilotArmsLegsModel);
 });
 
-// parachute
+// draw parachute
 function createParachute(x_val, y_val) {
   const object = new THREE.Group();
 
@@ -248,7 +272,7 @@ function createParachute(x_val, y_val) {
   return object;
 }
 
-// landing box
+// draw landing box
 function createLandingBox(filler_type) {
   const boxGroup = new THREE.Group();
   const boxMaterial = new THREE.MeshStandardMaterial({ color: 0x8b4513 });
@@ -302,9 +326,8 @@ function createLandingBox(filler_type) {
   fillerGeometry.setAttribute('uv2', uv2fillerGeometry);
 
   let fillerMaterial = null;
-if (filler_type === "water") {
-    fillerMaterial = new THREE.MeshStandardMaterial({ color: 0x1e90ff, transparent: true, opacity: 0.7 });
-  }else if (filler_type === "sand") {
+
+if (filler_type === "sand") {
     fillerMaterial = new THREE.MeshStandardMaterial({ color: 0xd2b48c });
   } else if (filler_type === "hard") {
     fillerMaterial = new THREE.MeshStandardMaterial({ color: 0x555555 });
@@ -317,7 +340,7 @@ if (filler_type === "water") {
   return boxGroup;
 }
 
-//update landing box
+// function to update landing box
 function updateLandingBox() {
   if (PARAMS.groundType === "hard" || PARAMS.groundType === "sand") {
     groundLevel = -29985;
@@ -328,6 +351,7 @@ function updateLandingBox() {
   if (landingBox && pilotModel) {
     landingBox.position.set(pilotModel.position.x, -30000, pilotModel.position.z);
   }
+  // remove old one
   if (landingBox && currentLandingBoxType != PARAMS.groundType) {
     scene.remove(landingBox);
     landingBox.traverse((child) => {
@@ -338,6 +362,7 @@ function updateLandingBox() {
     });
     landingBox = null;
   } else if (!landingBox) {
+    // create new one
     landingBox = createLandingBox(PARAMS.groundType);
     currentLandingBoxType = PARAMS.groundType;
     if (landingBox) {
@@ -350,7 +375,7 @@ function updateLandingBox() {
 
 updateLandingBox();
 
-// light
+// add light
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
 scene.add(ambientLight);
 
@@ -361,7 +386,7 @@ scene.add(ambientLight);
 const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
 directionalLight.position.set(1000, groundLevel + PARAMS["airplaneHeight"] + 1000, 1000);
 scene.add(directionalLight);
-// camera
+// initialize the camera
 const camera = new THREE.PerspectiveCamera(
   75,
   window.innerWidth / window.innerHeight,
@@ -377,48 +402,249 @@ const canvas = document.querySelector("canvas.threejs");
 const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-function createInfoPanel(text, topPosition) {
-      const div = document.createElement("div");
-      div.style.position = "absolute";
-      div.style.top = `${topPosition}px`;
-      div.style.left = "20px";
-      div.style.padding = "8px 16px";
-      div.style.background = "rgba(45, 45, 45, 0.8)";
-      div.style.color = "#E0E0E0";
-      div.style.fontFamily = "monospace";
-      div.style.fontSize = "16px";
-      div.style.fontWeight = "bold";
-      div.style.borderRadius = "8px";
-      div.style.zIndex = "999";
-      div.innerText = text;
-      document.body.appendChild(div);
-      return div;
-  }
 
-const altitudeDiv = createInfoPanel("Height: 0 m", 20);
-const velocityDiv = createInfoPanel("Velocity: 0 m/s", 60);
-const accelerationDiv = createInfoPanel("Acceleration: 0 m/s²", 100);
-const yawDiv = createInfoPanel("Yaw: 0°", 140);
-const posXDiv = createInfoPanel("Pos X: 0.00", 180);
-const posYDiv = createInfoPanel("Pos Y: 0.00", 220);
-const posZDiv = createInfoPanel("Pos Z: 0.00", 260);
+// function createInfoPanel(text, topPosition) {
+//       const div = document.createElement("div");
+//       div.style.position = "absolute";
+//       div.style.top = `${topPosition}px`;
+//       div.style.left = "20px";
+//       div.style.padding = "8px 16px";
+//       div.style.background = "rgba(45, 45, 45, 0.8)";
+//       div.style.color = "#E0E0E0";
+//       div.style.fontFamily = "monospace";
+//       div.style.fontSize = "16px";
+//       div.style.fontWeight = "bold";
+//       div.style.borderRadius = "8px";
+//       div.style.zIndex = "999";
+//       div.innerText = text;
+//       document.body.appendChild(div);
+//       return div;
+//   }
 
-//  resize 
-window.addEventListener("resize", () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-});
+// // استخدام الدالة لإنشاء اللوحات
+// const altitudeDiv = createInfoPanel("Height: 0 m", 20);
+// const velocityDiv = createInfoPanel("Velocity: 0 m/s", 60);
+// const accelerationDiv = createInfoPanel("Acceleration: 0 m/s²", 100);
 
+// const yawDiv = createInfoPanel("Yaw: 0°", 140);
+// const posXDiv = createInfoPanel("Pos X: 0.00", 180);
+// const posYDiv = createInfoPanel("Pos Y: 0.00", 220);
+// const posZDiv = createInfoPanel("Pos Z: 0.00", 260);
+// // add resize listener
+// window.addEventListener("resize", () => {
+//   camera.aspect = window.innerWidth / window.innerHeight;
+//   camera.updateProjectionMatrix();
+//   renderer.setSize(window.innerWidth, window.innerHeight);
+// });
+function createCombinedInfoPanel() {
+  const style = document.createElement('style');
+style.innerHTML = `
+    .info-panel {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        padding: 10px; 
+        background: rgba(30, 30, 30, 0.85);
+        color: #E0E0E0;
+        border-radius: 8px; 
+        z-index: 999;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+        font-family: monospace;
+        width: 250px; /* Reduced width */
+    }
+    .info-panel h2 {
+        text-align: right;
+        color: #61A470;
+        font-size: 16px; 
+        margin: 0 0 10px 0; 
+        padding-bottom: 8px; 
+        border-bottom: 1px solid #61A470; 
+    }
+    .info-panel h3 {
+        text-align: right;
+        color: #61A470;
+        font-size: 14px; 
+        margin: 10px 0 8px 0; 
+        padding-bottom: 4px; 
+        border-bottom: 1px solid #61A470;
+        direction: rtl;
+    }
+    .info-panel .data-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        align-items: center;
+        margin-bottom: 6px; 
+        font-size: 14px;
+        direction: rtl;
+    }
+    .info-panel .label {
+        font-weight: bold;
+        color: #C0C0C0;
+        text-align: right;
+        white-space: nowrap;
+    }
+    .info-panel .value {
+        text-align: center;
+        font-weight: bold;
+        color: #E0E0E0;
+        direction: ltr;
+    }
+    .info-panel .unit {
+        text-align: left;
+        font-weight: bold;
+        color: #C0C0C0;
+    }
+    .controls-list {
+        direction: rtl;
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    .controls-list li {
+        margin-bottom: 3px; 
+        color: #C0C0C0;
+        font-size: 14px; 
+    }
+    .controls-list .key {
+        font-weight: bold;
+        color: #E0E0E0;
+        background-color: #444;
+        padding: 1px 5px;
+        border-radius: 3px; 
+        margin-left: 3px;
+    }
+`;
+document.head.appendChild(style);
+
+    const panel = document.createElement("div");
+    panel.classList.add("info-panel");
+    document.body.appendChild(panel);
+
+    const title = document.createElement("h2");
+    title.innerText = "معلومات الرحلة";
+    panel.appendChild(title);
+
+    const dataContainer = document.createElement("div");
+    panel.appendChild(dataContainer);
+
+    const elements = {};
+   const motionPoints = [
+    { label: "الارتفاع", key: "altitude", unit: " m   " },
+    { label: "السرعة", key: "velocity", unit: " m/s   " },
+    { label: "التسارع", key: "acceleration", unit: " m/s²    " },
+];
+
+    motionPoints.forEach(item => {
+        const row = document.createElement("div");
+        row.classList.add("data-row");
+
+        const labelSpan = document.createElement("span");
+        labelSpan.classList.add("label");
+        labelSpan.innerText = item.label;
+        row.appendChild(labelSpan);
+
+        const valueSpan = document.createElement("span");
+        valueSpan.classList.add("value");
+        valueSpan.id = item.key + "Value";
+        elements[item.key] = valueSpan;
+        row.appendChild(valueSpan);
+
+        const unitSpan = document.createElement("span");
+        unitSpan.classList.add("unit");
+        unitSpan.innerText = item.unit;
+        row.appendChild(unitSpan);
+
+        dataContainer.appendChild(row);
+    });
+
+    // New section for Position
+    const positionTitle = document.createElement("h3");
+    positionTitle.innerText = "الموضع";
+    panel.appendChild(positionTitle);
+    
+    const positionContainer = document.createElement("div");
+    panel.appendChild(positionContainer);
+    
+    const positionPoints = [
+        { label: "الموضع X", key: "posX", unit: "m" },
+        { label: "الموضع Y", key: "posY", unit: "m" },
+        { label: "الموضع Z", key: "posZ", unit: "m" },
+        { label: "زاوية ", key: "yaw", unit: "°" },
+    ];
+
+    positionPoints.forEach(item => {
+        const row = document.createElement("div");
+        row.classList.add("data-row");
+
+        const labelSpan = document.createElement("span");
+        labelSpan.classList.add("label");
+        labelSpan.innerText = item.label;
+        row.appendChild(labelSpan);
+
+        const valueSpan = document.createElement("span");
+        valueSpan.classList.add("value");
+        valueSpan.id = item.key + "Value";
+        elements[item.key] = valueSpan;
+        row.appendChild(valueSpan);
+
+        const unitSpan = document.createElement("span");
+        unitSpan.classList.add("unit");
+        unitSpan.innerText = item.unit;
+        row.appendChild(unitSpan);
+
+        positionContainer.appendChild(row);
+    });
+    
+    // New section for controls
+    const controlsTitle = document.createElement("h3");
+    controlsTitle.innerText = "التحكم";
+    panel.appendChild(controlsTitle);
+
+    const controlsList = document.createElement("ul");
+    controlsList.classList.add("controls-list");
+    
+    controlsList.innerHTML = `
+        <li>
+            <span class="key">S</span>
+            <span>جاهز للقفز</span>
+        </li>
+        <li>
+            <span class="key">O</span>
+            <span>لفتح المظلة</span>
+        </li>
+        <li>
+            <span class="key">H</span>
+            <span>لإغلاق المظلة</span>
+        </li>
+    `;
+    panel.appendChild(controlsList);
+
+    return elements;
+}
+
+const infoElements = createCombinedInfoPanel();
 let dropSpeed = 50;
 
 let cameraAngle = 0;
 const cameraRadius = 100; 
-//keybord
+
+// add keyboard listener
 window.addEventListener("keydown", (event) => {
     if (!event) {
         return;
     }
+if (ispilotDropping && window.parachute) {
+    // if (event.key === "c") {
+    //     window.parachute.yawDampingCoeff += 0.01;
+    //     yawDampingInput.value = window.parachute.yawDampingCoeff;
+    //     console.log(`🌀 زيادة معامل مقاومة الدوران إلى ${window.parachute.yawDampingCoeff.toFixed(2)}`);
+    // }
+    // if (event.key === "f") {
+    //     window.parachute.yawDampingCoeff = Math.max(0, window.parachute.yawDampingCoeff - 0.01);
+    //     yawDampingInput.value = window.parachute.yawDampingCoeff;
+    //     console.log(`🌀 تقليل معامل مقاومة الدوران إلى ${window.parachute.yawDampingCoeff.toFixed(2)}`);
+    // }
+}
     if (event.key === "s") {
         if (pilotModel && planeModel && !ispilotDropping) {
             ispilotDropping = true;
@@ -435,7 +661,7 @@ window.addEventListener("keydown", (event) => {
     }
 
     if (ispilotDropping && window.parachute) {
-        //  "1": افتح اليدين
+        // مفتاح "1": افتح اليدين
         if (event.key === "1") {
             if (pilotModel.visible) {
                 pilotModel.visible = false;
@@ -448,7 +674,7 @@ window.addEventListener("keydown", (event) => {
             console.log("🤸‍♂️ تم نشر اليدين لزيادة المقاومة.");
         }
 
-        //  "2": اضمم اليدين
+        // مفتاح "2": اضمم اليدين
         if (event.key === "2") {
             if (pilotArmsModel.visible) {
                 pilotArmsModel.visible = false;
@@ -461,7 +687,7 @@ window.addEventListener("keydown", (event) => {
             console.log("🧍‍♂️ تم ضم اليدين لتقليل المقاومة.");
         }
 
-        //  "3": افتح الأرجل
+        // مفتاح "3": افتح الأرجل
         if (event.key === "3") {
             if (pilotModel.visible) {
                 pilotModel.visible = false;
@@ -474,7 +700,7 @@ window.addEventListener("keydown", (event) => {
             console.log("🦵 تم نشر الأرجل لزيادة المقاومة.");
         }
 
-        //  "4": اضمم الأرجل
+        // مفتاح "4": اضمم الأرجل
         if (event.key === "4") {
             if (pilotLegsModel.visible) {
                 pilotLegsModel.visible = false;
@@ -523,6 +749,8 @@ window.addEventListener("keydown", (event) => {
             }
         }
     }
+
+   // main.js file
 if (event.key === "h") {
     dropSpeed = 50;
     if (pilotModel && pilotHasParachute && ispilotDropping) {
@@ -573,97 +801,102 @@ window.addEventListener("wheel", (event) => {
 });
 
 // render loop
+// render loop
 const renderloop = () => {
-  if (planeModel) {
-    planeModel.position.set(0, groundLevel + PARAMS["airplaneHeight"], 0);
-  }
+    if (planeModel) {
+        planeModel.position.set(0, groundLevel + PARAMS["airplaneHeight"], 0);
+    }
 
-  if (window.isSimulationRunning && pilotModel && window.parachute) {
-    const physicsHeight = window.parachute.position.y;
-    const mappedHeight = physicsHeight + groundLevel;
+    if (window.isSimulationRunning && pilotModel && window.parachute) {
+        const physicsHeight = window.parachute.position.y;
+        const mappedHeight = physicsHeight + groundLevel;
 
- 
-    pilotModel.position.y = mappedHeight;
-    pilotModel.position.x = window.parachute.position.x;
-    pilotModel.position.z = window.parachute.position.z;
+        pilotModel.position.y = mappedHeight;
+        pilotModel.position.x = window.parachute.position.x;
+        pilotModel.position.z = window.parachute.position.z;
+        pilotModel.rotation.y = window.parachute.yawAngle * Math.PI / 180;
 
-    pilotModel.rotation.y = window.parachute.yawAngle * Math.PI / 180;
+        if (pilotArmsModel) pilotArmsModel.position.copy(pilotModel.position);
+        if (pilotLegsModel) pilotLegsModel.position.copy(pilotModel.position);
+        if (pilotArmsLegsModel) pilotArmsLegsModel.position.copy(pilotModel.position);
 
-    if (pilotArmsModel) pilotArmsModel.position.copy(pilotModel.position);
-    if (pilotLegsModel) pilotLegsModel.position.copy(pilotModel.position);
-    if (pilotArmsLegsModel) pilotArmsLegsModel.position.copy(pilotModel.position);
+        if (pilotArmsModel) pilotArmsModel.rotation.copy(pilotModel.rotation);
+        if (pilotLegsModel) pilotLegsModel.rotation.copy(pilotModel.rotation);
+        if (pilotArmsLegsModel) pilotArmsLegsModel.rotation.copy(pilotModel.rotation);
 
-    if (pilotArmsModel) pilotArmsModel.rotation.copy(pilotModel.rotation);
-    if (pilotLegsModel) pilotLegsModel.rotation.copy(pilotModel.rotation);
-    if (pilotArmsLegsModel) pilotArmsLegsModel.rotation.copy(pilotModel.rotation);
+    } else if (!window.isSimulationRunning && pilotModel) {
+        if (pilotModel.position.y > groundLevel) {
+            pilotModel.position.y = groundLevel;
+        }
+        if (pilotHasParachute) {
+            parachute_1_Model.visible = false;
+            parachute_2_Model.visible = false;
+            parachute_3_Model.visible = false;
+            parachute_4_Model.visible = false;
+        }
+    }
 
-  } else if (!window.isSimulationRunning && pilotModel) {
-    if (pilotModel.position.y > groundLevel) {
-      pilotModel.position.y = groundLevel;
-    }
-    if (pilotHasParachute) {
-      parachute_1_Model.visible = false;
-      parachute_2_Model.visible = false;
-      parachute_3_Model.visible = false;
-      parachute_4_Model.visible = false;
-    }
-  }
+    if (currentCameraTarget === "pilot" && pilotModel) {
+        const radius = 70;
+        const horizontalAngle = cursor.x * Math.PI * 2;
+        const verticalAngle = cursor.y * Math.PI * 0.5;
+        camera.position.x =
+            pilotModel.position.x +
+            Math.sin(horizontalAngle) * Math.cos(verticalAngle) * radius;
 
-  if (currentCameraTarget === "pilot" && pilotModel) {
-    const radius = 70;
-    const horizontalAngle = cursor.x * Math.PI * 2;
-    const verticalAngle = cursor.y * Math.PI * 0.5;
-    camera.position.x =
-      pilotModel.position.x +
-      Math.sin(horizontalAngle) * Math.cos(verticalAngle) * radius;
+        camera.position.z =
+            pilotModel.position.z +
+            Math.cos(horizontalAngle) * Math.cos(verticalAngle) * radius;
 
-    camera.position.z =
-      pilotModel.position.z +
-      Math.cos(horizontalAngle) * Math.cos(verticalAngle) * radius;
+        camera.position.y =
+            pilotModel.position.y + Math.sin(verticalAngle) * radius + 20;
 
-    camera.position.y =
-      pilotModel.position.y + Math.sin(verticalAngle) * radius + 20;
+        const lookAtOffset = 10;
+        camera.lookAt(
+            new THREE.Vector3(
+                pilotModel.position.x,
+                pilotModel.position.y + lookAtOffset,
+                pilotModel.position.z
+            )
+        );
+    } else if (currentCameraTarget === "helicopter" && planeModel) {
+        cameraAngle += 0.002;
+        camera.position.x = planeModel.position.x + Math.sin(cameraAngle) * cameraRadius;
+        camera.position.y = planeModel.position.y + 20; // ارتفاع الكاميرا
+        camera.position.z = planeModel.position.z + Math.cos(cameraAngle) * cameraRadius;
+        camera.lookAt(planeModel.position);
+    }
 
-    const lookAtOffset = 10;
-    camera.lookAt(
-      new THREE.Vector3(
-        pilotModel.position.x,
-        pilotModel.position.y + lookAtOffset,
-        pilotModel.position.z
-      )
-    );
-  } else if (currentCameraTarget === "helicopter" && planeModel) {
-    cameraAngle += 0.002; 
-    camera.position.x = planeModel.position.x + Math.sin(cameraAngle) * cameraRadius;
-    camera.position.y = planeModel.position.y + 20; // ارتفاع الكاميرا
-    camera.position.z = planeModel.position.z + Math.cos(cameraAngle) * cameraRadius;
-    camera.lookAt(planeModel.position);
-  }
-  if (reachedGround) {
-    pilotModel.position.y = groundLevel + 1;
-    pilotArmsModel.position.y = groundLevel + 1;
-    pilotLegsModel.position.y = groundLevel + 1;
-    pilotArmsLegsModel.position.y = groundLevel + 1;
-  }
-  updateLandingBox();
+    if (reachedGround) {
+        pilotModel.position.y = groundLevel + 1;
+        pilotArmsModel.position.y = groundLevel + 1;
+        pilotLegsModel.position.y = groundLevel + 1;
+        pilotArmsLegsModel.position.y = groundLevel + 1;
+    }
+    
+    updateLandingBox();
 
-if (pilotModel) {
-  const altitude = Math.max(0, Math.round(pilotModel.position.y - groundLevel));
-  altitudeDiv.innerText = `hight: ${altitude} m`;
-}
-  if (window.parachute) {
-const accelerationY = window.parachute.acceleration.y; const velocityY = window.parachute.velocity.y.toFixed(2); 
-    velocityDiv.innerText = `Velocity: ${-velocityY} m/s`;
-accelerationDiv.innerText = `Acceleration: ${accelerationY.toFixed(2)} m/s²`; const posX = window.parachute.position.x.toFixed(2);
- const posY = window.parachute.position.y.toFixed(2);
-    const posZ = window.parachute.position.z.toFixed(2);
-    posXDiv.innerText = `Pos X: ${posX}`;
-    posYDiv.innerText = `Pos Y: ${posY}`;
-    posZDiv.innerText = `Pos Z: ${posZ}`;
- yawDiv.innerText = `Angle: ${window.parachute.yawAngle.toFixed(0)}°`;
-  } 
+    // Consolidated and corrected code to update the information panel
+    if (pilotModel && window.parachute) {
+        const altitude = Math.max(0, Math.round(pilotModel.position.y - groundLevel));
+        const accelerationY = window.parachute.acceleration.y;
+        const velocityY = window.parachute.velocity.y.toFixed(2);
+        const posX = window.parachute.position.x.toFixed(2);
+        const posY = window.parachute.position.y.toFixed(2);
+        const posZ = window.parachute.position.z.toFixed(2);
+        const yawAngle = window.parachute.yawAngle.toFixed(0);
 
-  renderer.render(scene, camera);
-  window.requestAnimationFrame(renderloop);
+        infoElements.altitude.innerText = `${altitude}`;
+        infoElements.velocity.innerText = `${-velocityY}`;
+        infoElements.acceleration.innerText = `${-accelerationY.toFixed(2)}`;
+        infoElements.posX.innerText = `${posX}`;
+        infoElements.posY.innerText = `${posY}`;
+        infoElements.posZ.innerText = `${posZ}`;
+        infoElements.yaw.innerText = `${yawAngle}`;
+    }
+
+    renderer.render(scene, camera);
+    window.requestAnimationFrame(renderloop);
 };
+
 renderloop();

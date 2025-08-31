@@ -11,7 +11,7 @@ const parachute = new Parachute({
   closedArea: 1.0,
   openArea: 15.0,
   dragCoeff: 1.2,
-//   initialHeight: 1500,
+//initialHeight: 1500,
 });
 window.parachute = parachute;
 
