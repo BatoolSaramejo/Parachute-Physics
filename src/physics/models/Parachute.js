@@ -43,35 +43,41 @@ export class Parachute {
     this.momentOfInertia = options.momentOfInertia || 15; // I (kg·m²)
 
     this.reachedTerminalVelocity = false;
-    this.hasStoppedRotation = false; // متغير جديد لمنع تكرار الرسالة
-     this.wind = options.wind || new Vector3(0, 0, 0);
- }
-
-  // dynamicAirDensity() {
-  //   const scaleHeight = 8500; // meters
-  //   return AIR_DENSITY_SEA_LEVEL * Math.exp(-this.position.y / scaleHeight);
-  // }
+    this.hasStoppedRotation = false; // متغير لمنع تكرار الرسالة
+    this.wind = options.wind || new Vector3(0, 0, 0);
+  }
 
   gravityForce() {
     return new Vector3(0, -this.mass * this.gravity, 0);
   }
-dragForce() {
-    // حساب السرعة النسبية (سرعة المظلي - سرعة الرياح)
+
+  dragForce() {
     const relativeVelocity = this.velocity.subtract(this.wind);
     
     const speed = relativeVelocity.magnitude();
     const baseArea = this.isParachuteOpen ? this.openArea : this.closedArea;
     const area = baseArea * this.bodyPostureFactor * this.legPostureFactor;
-   // const rho = this.dynamicAirDensity();
-   const rho = AIR_DENSITY_SEA_LEVEL;
+    const rho = AIR_DENSITY_SEA_LEVEL;
     const dragMagnitude = 0.5 * rho * this.dragCoeff * area * speed * speed;
 
     const dragDirection = speed === 0
         ? new Vector3()
         : relativeVelocity.normalize().negate();
 
-    return dragDirection.scale(dragMagnitude);
-}
+    const sinRoll = Math.sin(this.orientation.x);
+    const cosRoll = Math.cos(this.orientation.x);
+    const sinPitch = Math.sin(this.orientation.z);
+    const cosPitch = Math.cos(this.orientation.z);
+
+    const adjustedDrag = new Vector3(
+      dragDirection.x * cosPitch - dragDirection.y * sinPitch + sinRoll * 0.02,
+      dragDirection.y * cosRoll + sinPitch * 0.01,
+      dragDirection.z * cosPitch + sinRoll * 0.02
+    ).normalize();
+
+    return adjustedDrag.scale(dragMagnitude);
+  }
+
   tensionForce() {
     const totalTension = this.tensionLeft + this.tensionRight;
     const clamped = Math.min(totalTension, MAX_TENSION_FORCE);
@@ -80,30 +86,51 @@ dragForce() {
 
   lateralTensionDrift() {
     const diff = this.tensionLeft - this.tensionRight;
-    return new Vector3(diff * 0.001, 0, diff * 0.001); // small lateral drift scaling
+    return new Vector3(diff * 0.002, 0, diff * 0.002);
   }
 
   impactForce(deltaV) {
     const deltaT = this.computeCollisionDeltaTime();
     const magnitude = this.mass * deltaV / deltaT;
-    return new Vector3(0, magnitude, 0); // للأعلى
+    return new Vector3(0, magnitude, 0);
   }
 
   torqueForce() {
     const tensionDiff = this.tensionLeft - this.tensionRight;
-    const activeTorque = tensionDiff * this.armLength;
-    const activeTorqueVector = new Vector3(0, activeTorque, 0);
+
+    // 🔹 تعديل جديد: خفض activeTorqueY إلى 0.0005 عشان دوران أضعف جدًا حول Y
+    const activeTorqueY = tensionDiff * this.armLength * 0.0005;
+
+    // 🔹 الحفاظ على rollTorque و pitchTorque لميلان بسيط
+    const rollTorque = tensionDiff * 0.01;
+    const pitchTorque = tensionDiff * 0.005;
+
+    // 🔹 التخميد
     const dynamicDampingCoeff = this.yawDampingCoeff * (this.isParachuteOpen ? 3 : 1) * this.bodyPostureFactor;
     const dampingTorque = this.angularVelocity.scale(-dynamicDampingCoeff);
-    const restoringTorque = -2.0 * this.orientation.y; // عزم استعادة أقوى لنقصان أسرع
-    const netTorque = activeTorqueVector.add(dampingTorque).add(new Vector3(0, restoringTorque, 0));
-    if (Math.abs(tensionDiff) < 1 && !this.hasStoppedRotation) {
-      this.angularVelocity.y = 0; // إيقاف السرعة الزاوية
-      console.log('✅ توقف الدوران بسبب شد متساوي');
-      this.hasStoppedRotation = true; // منع تكرار الرسالة
-    } else if (Math.abs(tensionDiff) >= 1) {
-      this.hasStoppedRotation = false; // إعادة تعيين الحالة إذا تغير الشد
+
+    // 🔹 تعديل جديد: عزم استرجاع أقوى جدًا للـ orientation.y
+    const restoringTorqueX = -0.5 * this.orientation.x;
+    const restoringTorqueY = -5.0 * this.orientation.y; // زيادة من -3.0 إلى -5.0
+    const restoringTorqueZ = -0.5 * this.orientation.z;
+
+    // 🔹 العزم الصافي
+    const netTorque = new Vector3(
+      rollTorque + restoringTorqueX + dampingTorque.x,
+      activeTorqueY + restoringTorqueY + dampingTorque.y,
+      pitchTorque + restoringTorqueZ + dampingTorque.z
+    );
+
+    // 🔹 تعديل جديد: إيقاف الدوران إذا كان tensionDiff صغير جدًا
+    if (Math.abs(tensionDiff) < 0.05 && !this.hasStoppedRotation) { // خفض من 0.1 إلى 0.05
+      this.angularVelocity = new Vector3(0, 0, 0);
+      this.orientation = new Vector3(this.orientation.x * 0.5, 0, this.orientation.z * 0.5); // 🔹 إعادة تعيين orientation.y وتخفيف x/z
+      console.log('✅ توقف الدوران بسبب شد متساوي تقريبًا');
+      this.hasStoppedRotation = true;
+    } else if (Math.abs(tensionDiff) >= 0.05) {
+      this  .hasStoppedRotation = false;
     }
+
     return netTorque;
   }
 
@@ -112,7 +139,11 @@ dragForce() {
       console.warn('⚠️ Moment of Inertia is zero! Setting angular acceleration to 0');
       return new Vector3(0, 0, 0);
     }
-    return new Vector3(0, torque.y / this.momentOfInertia, 0);
+    return new Vector3(
+      torque.x / this.momentOfInertia,
+      torque.y / this.momentOfInertia,
+      torque.z / this.momentOfInertia
+    );
   }
 
   totalForce() {
@@ -121,6 +152,17 @@ dragForce() {
     total = total.add(this.dragForce());
     total = total.add(this.tensionForce());
     total = total.add(this.lateralTensionDrift());
+
+    const lateralFromTilt = new Vector3(
+      Math.sin(this.orientation.x) * 0.05 * this.mass,
+      0,
+      Math.sin(this.orientation.z) * 0.05 * this.mass
+    );
+
+    lateralFromTilt.x = Math.max(Math.min(lateralFromTilt.x, 10), -10);
+    lateralFromTilt.z = Math.max(Math.min(lateralFromTilt.z, 10), -10);
+
+    total = total.add(lateralFromTilt);
 
     if (this.position.y <= 0) {
       const deltaV = Math.abs(this.velocity.y);
@@ -137,15 +179,18 @@ dragForce() {
 
   computeCollisionDeltaTime() {
     switch (this.surfaceType) {
-      case 'hard': return 0.05;  // أرض صلبة (زمن توقف سريع)
-      case 'ice': return 0.3;   // أرض جليدية
-      case 'sand': return 1.0;  // رمل (زمن توقف أبطأ)
-      case 'water': return 2.0; // ماء (زمن توقف أطول)
-      default: return 0.09;      // افتراضي
+      case 'hard': return 0.05;
+      case 'ice': return 0.3;
+      case 'sand': return 1.0;
+      case 'water': return 2.0;
+      default: return 0.09;
     }
   }
 
   update(dt) {
+    // 🔹 تعديل جديد: تحديد dt عشان نمنع تقلبات كبيرة
+    const cappedDt = Math.min(dt, 0.1); // سقف للـ dt
+
     // 1️⃣ حساب العزم (Torque)
     const torque = this.torqueForce();
 
@@ -157,14 +202,30 @@ dragForce() {
     }
 
     // 3️⃣ تحديث السرعة الزاوية (Angular Velocity)
-    this.angularVelocity = this.angularVelocity.add(this.angularAcceleration.scale(dt));
+    this.angularVelocity = this.angularVelocity.add(this.angularAcceleration.scale(cappedDt));
 
-    // 🛑 تطبيق التخميد (احتكاك هوائي/ميكانيكي)
-    const dampingFactor = 0.9; // تخميد أضعف لسلاسة أكثر
+    // 🔹 تعديل جديد: سقف للسرعة الزاوية عشان نمنع دوران سريع (يويو)
+    const maxAngularVelocity = 0.1; // rad/s
+    if (Math.abs(this.angularVelocity.y) > maxAngularVelocity) {
+      this.angularVelocity.y = Math.sign(this.angularVelocity.y) * maxAngularVelocity;
+    }
+
+    // 🔹 تعديل جديد: تخميد أقوى جدًا
+    const dampingFactor = 0.999; // زيادة من 0.995 إلى 0.999
     this.angularVelocity = this.angularVelocity.scale(dampingFactor);
 
+    // 🔹 تعديل جديد: إذا السرعة الزاوية صغيرة جدًا و tensionDiff صغير، أوقفها
+    if (this.angularVelocity.magnitude() < 0.0005 && Math.abs(this.tensionLeft - this.tensionRight) < 0.05) {
+      this.angularVelocity = new Vector3(0, 0, 0);
+    }
+
     // 4️⃣ تحديث الزاوية (Orientation)
-    this.orientation = this.orientation.add(this.angularVelocity.scale(dt));
+    this.orientation = this.orientation.add(this.angularVelocity.scale(cappedDt));
+
+    // 🔹 تعديل جديد: تخميد إضافي للـ orientation إذا كانت صغيرة
+    if (Math.abs(this.orientation.y) < 0.01 && Math.abs(this.tensionLeft - this.tensionRight) < 0.05) {
+      this.orientation.y = 0;
+    }
     this.orientation.y = (this.orientation.y + Math.PI * 2) % (Math.PI * 2);
 
     // 5️⃣ تحديث القوى الخطية (Linear Forces)
@@ -178,10 +239,10 @@ dragForce() {
     }
 
     // 7️⃣ تحديث السرعة الخطية (Linear Velocity)
-    this.velocity = this.velocity.add(this.acceleration.scale(dt));
+    this.velocity = this.velocity.add(this.acceleration.scale(cappedDt));
 
     // 8️⃣ تحديث الموقع (Position)
-    this.position = this.position.add(this.velocity.scale(dt));
+    this.position = this.position.add(this.velocity.scale(cappedDt));
 
     // 9️⃣ تحديث زاوية الدوران العامة (Yaw Angle)
     this.yawAngle = this.orientation.y * (180 / Math.PI) % 360;
@@ -192,9 +253,9 @@ dragForce() {
       this.position.y = 0;
       this.velocity.y = 0;
       this.angularVelocity = new Vector3(0, 0, 0);
-      this.orientation.y = 0; // إعادة الزاوية للصفر عند الهبوط
+      this.orientation = new Vector3(0, 0, 0); // 🔹 إعادة تعيين كل الزوايا
       this.yawAngle = 0;
-      this.hasStoppedRotation = false; // إعادة تعيين حالة الرسالة
+      this.hasStoppedRotation = false;
       console.log('✅ هبوط ناجح - تم التوقف');
     }
   }
