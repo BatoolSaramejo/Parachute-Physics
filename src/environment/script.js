@@ -90,6 +90,14 @@ pane
     if (window.parachute) {
       window.parachute.openArea = ev.value;
       console.log(`🪂 تم تغيير مساحة المظلة المفتوحة إلى ${ev.value} متر مربع`);
+      if (parachute_1_Model) {
+        // console.log(parachute_1_Model.position.y);
+        parachute_1_Model.scale.x = 1.1 + (ev.value - 20) / 200;
+        parachute_1_Model.scale.y = 1.1 + (ev.value - 20) / 200;
+        parachute_1_Model.scale.z = 1.1 + (ev.value - 20) / 200;
+
+        parachute_1_Model.position.y = 3.2 + (ev.value - 20) / 100;
+      }
     }
   });
 
@@ -160,12 +168,22 @@ pane.on("change", (ev) => {
   if (ev.presetKey === "tensionLeft") {
     window.parachute.tensionLeft = ev.value;
     console.log(`⬅️ شد الحبل الأيسر: ${ev.value} نيوتن`);
+    if (ev.value > 0 && window.parachute.isParachuteOpen) {
+      pilotModel.rotation.z = 0.2;
+    } else {
+      pilotModel.rotation.z = 0;
+    }
   }
 
   // 🆕 جديد: تحديث شد الحبل الأيمن
   if (ev.presetKey === "tensionRight") {
     window.parachute.tensionRight = ev.value;
     console.log(`➡️ شد الحبل الأيمن: ${ev.value} نيوتن`);
+    if (ev.value > 0 && window.parachute.isParachuteOpen) {
+      pilotModel.rotation.z = -0.2;
+    } else {
+      pilotModel.rotation.z = 0;
+    }
   }
 
   // 🆕 جديد: تحديث نوع الأرض
