@@ -163,6 +163,8 @@ pane.on("change", (ev) => {
     window.parachute.wind.z = ev.value;
     console.log(`💨 قوة الرياح على محور Z: ${ev.value} نيوتن`);
   }
+
+  // 🆕 جديد: تحديث شد الحبل الأيسر
   if (ev.presetKey === "tensionLeft") {
     window.parachute.tensionLeft = ev.value;
     console.log(`⬅️ شد الحبل الأيسر: ${ev.value} نيوتن`);
@@ -174,6 +176,8 @@ pane.on("change", (ev) => {
     //   pilotModel.rotation.z = 0;
     // }
   }
+
+  // 🆕 جديد: تحديث شد الحبل الأيمن
   if (ev.presetKey === "tensionRight") {
     window.parachute.tensionRight = ev.value;
     console.log(`➡️ شد الحبل الأيمن: ${ev.value} نيوتن`);
@@ -478,6 +482,39 @@ const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
+// function createInfoPanel(text, topPosition) {
+//       const div = document.createElement("div");
+//       div.style.position = "absolute";
+//       div.style.top = `${topPosition}px`;
+//       div.style.left = "20px";
+//       div.style.padding = "8px 16px";
+//       div.style.background = "rgba(45, 45, 45, 0.8)";
+//       div.style.color = "#E0E0E0";
+//       div.style.fontFamily = "monospace";
+//       div.style.fontSize = "16px";
+//       div.style.fontWeight = "bold";
+//       div.style.borderRadius = "8px";
+//       div.style.zIndex = "999";
+//       div.innerText = text;
+//       document.body.appendChild(div);
+//       return div;
+//   }
+
+// // استخدام الدالة لإنشاء اللوحات
+// const altitudeDiv = createInfoPanel("Height: 0 m", 20);
+// const velocityDiv = createInfoPanel("Velocity: 0 m/s", 60);
+// const accelerationDiv = createInfoPanel("Acceleration: 0 m/s²", 100);
+
+// const yawDiv = createInfoPanel("Yaw: 0°", 140);
+// const posXDiv = createInfoPanel("Pos X: 0.00", 180);
+// const posYDiv = createInfoPanel("Pos Y: 0.00", 220);
+// const posZDiv = createInfoPanel("Pos Z: 0.00", 260);
+// // add resize listener
+// window.addEventListener("resize", () => {
+//   camera.aspect = window.innerWidth / window.innerHeight;
+//   camera.updateProjectionMatrix();
+//   renderer.setSize(window.innerWidth, window.innerHeight);
+// });
 function createCombinedInfoPanel() {
   const style = document.createElement("style");
   style.innerHTML = `
@@ -572,9 +609,8 @@ function createCombinedInfoPanel() {
   const elements = {};
   const motionPoints = [
     { label: "الارتفاع", key: "altitude", unit: " m   " },
-    { label: "السرعة الارتدادية", key: "reboundVelocity", unit: " m/s   " },
+    { label: "السرعة", key: "velocity", unit: " m/s   " },
     { label: "التسارع", key: "acceleration", unit: " m/s²    " },
-    { label: "السرعة النهائية", key: "finalImpactVelocity", unit: " m/s²    " },
   ];
 
   motionPoints.forEach((item) => {
@@ -645,7 +681,6 @@ function createCombinedInfoPanel() {
 
   const controlsList = document.createElement("ul");
   controlsList.classList.add("controls-list");
-
   controlsList.innerHTML = `
   <div style="display: flex; justify-content: space-between; gap: 20px; width: 100%;">
     <!-- العمود الأول -->
@@ -676,11 +711,11 @@ function createCombinedInfoPanel() {
       </li>
       <li>
         <span class="key">3</span>
-        <span>ضم الرجلين</span>
+        <span>فتح الرجلين</span>
       </li>
       <li>
         <span class="key">4</span>
-        <span>فرد الرجلين</span>
+        <span>تسكير الرجلين</span>
       </li>
     </ul>
   </div>
@@ -867,128 +902,6 @@ window.addEventListener("wheel", (event) => {
 });
 
 // render loop
-// render loop
-// const renderloop = () => {
-//   const fallSpeedFactor = 3.0; // adjust this value to control visual speed
-
-//   if (planeModel) {
-//     planeModel.position.set(
-//       0,
-//       groundLevel + PARAMS["airplaneHeight"] * fallSpeedFactor,
-//       0
-//     );
-//   }
-
-//   if (window.isSimulationRunning && pilotModel && window.parachute) {
-//     const physicsHeight = window.parachute.position.y;
-
-//     // scale factor to make the fall look faster
-
-//     const mappedHeight = groundLevel + physicsHeight * fallSpeedFactor;
-
-//     // const mappedHeight = physicsHeight + groundLevel;
-
-//     pilotModel.position.y = mappedHeight;
-//     pilotModel.position.x = window.parachute.position.x;
-//     pilotModel.position.z = window.parachute.position.z;
-//     pilotModel.rotation.y = (window.parachute.yawAngle * Math.PI) / 180;
-
-//     if (pilotArmsModel) pilotArmsModel.position.copy(pilotModel.position);
-//     if (pilotLegsModel) pilotLegsModel.position.copy(pilotModel.position);
-//     if (pilotArmsLegsModel)
-//       pilotArmsLegsModel.position.copy(pilotModel.position);
-
-//     if (pilotArmsModel) pilotArmsModel.rotation.copy(pilotModel.rotation);
-//     if (pilotLegsModel) pilotLegsModel.rotation.copy(pilotModel.rotation);
-//     if (pilotArmsLegsModel)
-//       pilotArmsLegsModel.rotation.copy(pilotModel.rotation);
-//   } else if (!window.isSimulationRunning && pilotModel) {
-//     if (pilotModel.position.y > groundLevel) {
-//       pilotModel.position.y = groundLevel;
-//     }
-//     if (pilotHasParachute) {
-//       parachute_1_Model.visible = false;
-//       parachute_2_Model.visible = false;
-//       parachute_3_Model.visible = false;
-//       parachute_4_Model.visible = false;
-//     }
-//     pilotModel.rotation.z = 0;
-//     if (pilotModel) pilotModel.visible = true;
-//     if (pilotArmsModel) pilotArmsModel.visible = false;
-//     if (pilotLegsModel) pilotLegsModel.visible = false;
-//     if (pilotArmsLegsModel) pilotArmsLegsModel.visible = false;
-//   }
-
-//   if (currentCameraTarget === "pilot" && pilotModel) {
-//     const radius = 70;
-//     const horizontalAngle = cursor.x * Math.PI * 2;
-//     const verticalAngle = cursor.y * Math.PI * 0.5;
-//     camera.position.x =
-//       pilotModel.position.x +
-//       Math.sin(horizontalAngle) * Math.cos(verticalAngle) * radius;
-
-//     camera.position.z =
-//       pilotModel.position.z +
-//       Math.cos(horizontalAngle) * Math.cos(verticalAngle) * radius;
-
-//     camera.position.y =
-//       pilotModel.position.y + Math.sin(verticalAngle) * radius + 20;
-
-//     const lookAtOffset = 10;
-//     camera.lookAt(
-//       new THREE.Vector3(
-//         pilotModel.position.x,
-//         pilotModel.position.y + lookAtOffset,
-//         pilotModel.position.z
-//       )
-//     );
-//   } else if (currentCameraTarget === "helicopter" && planeModel) {
-//     cameraAngle += 0.002;
-//     camera.position.x =
-//       planeModel.position.x + Math.sin(cameraAngle) * cameraRadius;
-//     camera.position.y = planeModel.position.y + 20; // ارتفاع الكاميرا
-//     camera.position.z =
-//       planeModel.position.z + Math.cos(cameraAngle) * cameraRadius;
-//     camera.lookAt(planeModel.position);
-//   }
-
-//   if (reachedGround) {
-//     pilotModel.position.y = groundLevel + 1;
-//     pilotArmsModel.position.y = groundLevel + 1;
-//     pilotLegsModel.position.y = groundLevel + 1;
-//     pilotArmsLegsModel.position.y = groundLevel + 1;
-//   }
-
-//   updateLandingBox();
-
-//   // Consolidated and corrected code to update the information panel
-//   if (pilotModel && window.parachute) {
-//     const altitude = Math.max(
-//       0,
-//       Math.round((pilotModel.position.y - groundLevel) / fallSpeedFactor)
-//     );
-//     const accelerationY = window.parachute.acceleration.y;
-//     const velocityY = window.parachute.velocity.y.toFixed(2);
-//     const posX = window.parachute.position.x.toFixed(2);
-//     const posY = window.parachute.position.y.toFixed(2);
-//     const posZ = window.parachute.position.z.toFixed(2);
-//     const yawAngle = window.parachute.yawAngle.toFixed(0);
-
-//     infoElements.altitude.innerText = `${altitude}`;
-//     infoElements.velocity.innerText = `${-velocityY}`;
-//     // infoElements.acceleration.innerText = `${-accelerationY.toFixed(2)}`;
-//     infoElements.acceleration.innerText = `${Math.abs(accelerationY).toFixed(
-//       2
-//     )}`;
-//     infoElements.posX.innerText = `${posX}`;
-//     infoElements.posY.innerText = `${posY}`;
-//     infoElements.posZ.innerText = `${posZ}`;
-//     infoElements.yaw.innerText = `${yawAngle}`;
-//   }
-
-//   renderer.render(scene, camera);
-//   window.requestAnimationFrame(renderloop);
-// };
 const renderloop = () => {
   const fallSpeedFactor = 3.0;
 
@@ -1088,53 +1001,27 @@ const renderloop = () => {
     const altitude = Math.max(
       0,
       Math.round((pilotModel.position.y - groundLevel) / fallSpeedFactor)
-     );
+    );
+    const accelerationY = window.parachute.acceleration.y;
+    const velocityY = window.parachute.velocity.y.toFixed(2);
+    const posX = window.parachute.position.x.toFixed(2);
+    const posY = window.parachute.position.y.toFixed(2);
+    const posZ = window.parachute.position.z.toFixed(2);
+    const yawAngle = window.parachute.yawAngle.toFixed(0);
 
-     const accelerationY = window.parachute.acceleration.y;
-     
-  // تأكد من وجود القيم قبل استخدام toFixed
-  const reboundVelocity = window.parachute.reboundVelocity !== undefined
-  ? window.parachute.reboundVelocity.toFixed(2)
-  : "0.00";
-
-const finalImpactVelocity = window.parachute.finalImpactVelocity !== undefined
-  ? window.parachute.finalImpactVelocity.toFixed(2)
-  : "0.00";
-     const posX = window.parachute.position.x.toFixed(2);
-     const posY = window.parachute.position.y.toFixed(2);
-     const posZ = window.parachute.position.z.toFixed(2);
-     const yawAngle = window.parachute.yawAngle.toFixed(0);
+    infoElements.altitude.innerText = `${altitude}`;
+    infoElements.velocity.innerText = `${-velocityY}`;
+    infoElements.acceleration.innerText = `${Math.abs(accelerationY).toFixed(2)}`;
+    //infoElements.finalImpactVelocity.innerText = `${Math.abs(window.parachute.finalImpactVelocity).toFixed(2)}`;
+    infoElements.posX.innerText = `${posX}`;
+    infoElements.posY.innerText = `${posY}`;
+    infoElements.posZ.innerText = `${posZ}`;
+    infoElements.yaw.innerText = `${yawAngle}`;
    
-     infoElements.altitude.innerText = `${altitude}`;
-     infoElements.reboundVelocity.innerText = `${-reboundVelocity}`;
-     infoElements.finalImpactVelocity.innerText = `${finalImpactVelocity}`;
-     infoElements.acceleration.innerText = `${Math.abs(accelerationY).toFixed(2)}`;
-     infoElements.posX.innerText = `${posX}`;
-     infoElements.posY.innerText = `${posY}`;
-     infoElements.posZ.innerText = `${posZ}`;
-     infoElements.yaw.innerText = `${yawAngle}`;
-   }
-   
-   
-  //   const accelerationY = window.parachute.acceleration.y;
-  //   const reboundVelocity = window.parachute.reboundVelocity.toFixed(2);
-  //   const posX = window.parachute.position.x.toFixed(2);
-  //   const posY = window.parachute.position.y.toFixed(2);
-  //   const posZ = window.parachute.position.z.toFixed(2);
-  //   const yawAngle = window.parachute.yawAngle.toFixed(0);
-  //   //const finalImpactVelocity = window.parachute.finalImpactVelocity.toFixed(2);
 
-  //   infoElements.altitude.innerText = `${altitude}`;
-  //   infoElements.reboundVelocity.innerText = `${-reboundVelocity}`;
-  //   infoElements.acceleration.innerText = `${Math.abs(accelerationY).toFixed(2)}`;
-  //   infoElements.posX.innerText = `${posX}`;
-  //   infoElements.posY.innerText = `${posY}`;
-  //   infoElements.posZ.innerText = `${posZ}`;
-  //   infoElements.yaw.innerText = `${yawAngle}`;
-  //  // infoElements.finalImpactVelocity.innerText = `${finalImpactVelocity}`;
-  // }
-
+  }
   renderer.render(scene, camera);
   window.requestAnimationFrame(renderloop);
 };
+
 renderloop();
