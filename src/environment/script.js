@@ -609,8 +609,9 @@ function createCombinedInfoPanel() {
   const elements = {};
   const motionPoints = [
     { label: "الارتفاع", key: "altitude", unit: " m   " },
-    { label: "السرعة", key: "velocity", unit: " m/s   " },
+    { label: "السرعة الارتدادية", key: "velocity", unit: " m/s   " },
     { label: "التسارع", key: "acceleration", unit: " m/s²    " },
+    { label: "سرعة الهبوط", key: "finalImpactVelocity", unit: " m/s    " }
   ];
 
   motionPoints.forEach((item) => {
@@ -681,9 +682,8 @@ function createCombinedInfoPanel() {
 
   const controlsList = document.createElement("ul");
   controlsList.classList.add("controls-list");
-
   controlsList.innerHTML = `
-  <div style="display: flex; gap: 40px;">
+  <div style="display: flex; justify-content: space-between; gap: 20px; width: 100%;">
     <!-- العمود الأول -->
     <ul style="list-style: none; padding: 0; margin: 0;">
       <li>
@@ -721,7 +721,6 @@ function createCombinedInfoPanel() {
     </ul>
   </div>
 `;
-
 
   panel.appendChild(controlsList);
 
@@ -1135,13 +1134,16 @@ const renderloop = () => {
 
     infoElements.altitude.innerText = `${altitude}`;
     infoElements.velocity.innerText = `${-velocityY}`;
+    // infoElements.acceleration.innerText = `${-accelerationY.toFixed(2)}`;
     infoElements.acceleration.innerText = `${Math.abs(accelerationY).toFixed(2)}`;
+    infoElements.finalImpactVelocity.innerText = `${Math.abs(window.parachute.finalImpactVelocity).toFixed(2)}`;
     infoElements.posX.innerText = `${posX}`;
     infoElements.posY.innerText = `${posY}`;
     infoElements.posZ.innerText = `${posZ}`;
     infoElements.yaw.innerText = `${yawAngle}`;
-  }
+   
 
+  }
   renderer.render(scene, camera);
   window.requestAnimationFrame(renderloop);
 };
