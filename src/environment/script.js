@@ -482,39 +482,6 @@ const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-// function createInfoPanel(text, topPosition) {
-//       const div = document.createElement("div");
-//       div.style.position = "absolute";
-//       div.style.top = `${topPosition}px`;
-//       div.style.left = "20px";
-//       div.style.padding = "8px 16px";
-//       div.style.background = "rgba(45, 45, 45, 0.8)";
-//       div.style.color = "#E0E0E0";
-//       div.style.fontFamily = "monospace";
-//       div.style.fontSize = "16px";
-//       div.style.fontWeight = "bold";
-//       div.style.borderRadius = "8px";
-//       div.style.zIndex = "999";
-//       div.innerText = text;
-//       document.body.appendChild(div);
-//       return div;
-//   }
-
-// // استخدام الدالة لإنشاء اللوحات
-// const altitudeDiv = createInfoPanel("Height: 0 m", 20);
-// const velocityDiv = createInfoPanel("Velocity: 0 m/s", 60);
-// const accelerationDiv = createInfoPanel("Acceleration: 0 m/s²", 100);
-
-// const yawDiv = createInfoPanel("Yaw: 0°", 140);
-// const posXDiv = createInfoPanel("Pos X: 0.00", 180);
-// const posYDiv = createInfoPanel("Pos Y: 0.00", 220);
-// const posZDiv = createInfoPanel("Pos Z: 0.00", 260);
-// // add resize listener
-// window.addEventListener("resize", () => {
-//   camera.aspect = window.innerWidth / window.innerHeight;
-//   camera.updateProjectionMatrix();
-//   renderer.setSize(window.innerWidth, window.innerHeight);
-// });
 function createCombinedInfoPanel() {
   const style = document.createElement("style");
   style.innerHTML = `
