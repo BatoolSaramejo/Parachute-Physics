@@ -665,19 +665,46 @@ function createCombinedInfoPanel() {
   controlsList.classList.add("controls-list");
 
   controlsList.innerHTML = `
-        <li>
-            <span class="key">S</span>
-            <span>جاهز للقفز</span>
-        </li>
-        <li>
-            <span class="key">O</span>
-            <span>لفتح المظلة</span>
-        </li>
-        <li>
-            <span class="key">H</span>
-            <span>لإغلاق المظلة</span>
-        </li>
-    `;
+  <div style="display: flex; gap: 40px;">
+    <!-- العمود الأول -->
+    <ul style="list-style: none; padding: 0; margin: 0;">
+      <li>
+        <span class="key">S</span>
+        <span>جاهز للقفز</span>
+      </li>
+      <li>
+        <span class="key">O</span>
+        <span>لفتح المظلة</span>
+      </li>
+      <li>
+        <span class="key">H</span>
+        <span>لإغلاق المظلة</span>
+      </li>
+    </ul>
+
+    <!-- العمود الثاني -->
+    <ul style="list-style: none; padding: 0; margin: 0;">
+      <li>
+        <span class="key">1</span>
+        <span>فتح اليدين</span>
+      </li>
+      <li>
+        <span class="key">2</span>
+        <span>تسكير اليدين</span>
+      </li>
+      <li>
+        <span class="key">3</span>
+        <span>فتح الرجلين</span>
+      </li>
+      <li>
+        <span class="key">4</span>
+        <span>تسكير الرجلين</span>
+      </li>
+    </ul>
+  </div>
+`;
+
+
   panel.appendChild(controlsList);
 
   return elements;
