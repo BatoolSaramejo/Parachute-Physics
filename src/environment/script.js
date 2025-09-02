@@ -64,7 +64,7 @@ pane
 pane.addInput(PARAMS, "dragCoeff", { min: 0.5, max: 2.5, step: 0.01 });
 
 // Airplane height
-pane.addInput(PARAMS, "airplaneHeight", { min: 2000, max: 4000, step: 100 });
+pane.addInput(PARAMS, "airplaneHeight", { min: 1500, max: 3000, step: 100 });
 
 // Ground type
 pane.addInput(PARAMS, "groundType", {
@@ -90,6 +90,14 @@ pane
     if (window.parachute) {
       window.parachute.openArea = ev.value;
       console.log(`🪂 تم تغيير مساحة المظلة المفتوحة إلى ${ev.value} متر مربع`);
+      if (parachute_1_Model) {
+        // console.log(parachute_1_Model.position.y);
+        parachute_1_Model.scale.x = 1.1 + (ev.value - 20) / 200;
+        parachute_1_Model.scale.y = 1.1 + (ev.value - 20) / 200;
+        parachute_1_Model.scale.z = 1.1 + (ev.value - 20) / 200;
+
+        parachute_1_Model.position.y = 3.2 + (ev.value - 20) / 100;
+      }
     }
   });
 
@@ -160,12 +168,40 @@ pane.on("change", (ev) => {
   if (ev.presetKey === "tensionLeft") {
     window.parachute.tensionLeft = ev.value;
     console.log(`⬅️ شد الحبل الأيسر: ${ev.value} نيوتن`);
+    // if (PARAMS["tensionLeft"] > PARAMS["tensionRight"] && window.parachute.isParachuteOpen) {
+    //   pilotModel.rotation.z = 0.2;
+    // } else if (PARAMS["tensionLeft"] < PARAMS["tensionRight"] && window.parachute.isParachuteOpen) {
+    //   pilotModel.rotation.z = -0.2;
+    // } else if (window.parachute.isParachuteOpen) {
+    //   pilotModel.rotation.z = 0;
+    // }
   }
 
   // 🆕 جديد: تحديث شد الحبل الأيمن
   if (ev.presetKey === "tensionRight") {
     window.parachute.tensionRight = ev.value;
     console.log(`➡️ شد الحبل الأيمن: ${ev.value} نيوتن`);
+    // if (ev.value > 0 && window.parachute.isParachuteOpen) {
+    //   pilotModel.rotation.z = -0.2;
+    // } else {
+    //   pilotModel.rotation.z = 0;
+    // }
+  }
+
+  if (
+    pilotModel &&
+    PARAMS["tensionLeft"] > PARAMS["tensionRight"] &&
+    window.parachute.isParachuteOpen
+  ) {
+    pilotModel.rotation.z = -0.2;
+  } else if (
+    pilotModel &&
+    PARAMS["tensionLeft"] < PARAMS["tensionRight"] &&
+    window.parachute.isParachuteOpen
+  ) {
+    pilotModel.rotation.z = 0.2;
+  } else if (pilotModel && window.parachute.isParachuteOpen) {
+    pilotModel.rotation.z = 0;
   }
 
   // 🆕 جديد: تحديث نوع الأرض
@@ -647,26 +683,52 @@ function createCombinedInfoPanel() {
   controlsList.classList.add("controls-list");
 
   controlsList.innerHTML = `
-        <li>
-            <span class="key">S</span>
-            <span>جاهز للقفز</span>
-        </li>
-        <li>
-            <span class="key">O</span>
-            <span>لفتح المظلة</span>
-        </li>
-        <li>
-            <span class="key">H</span>
-            <span>لإغلاق المظلة</span>
-        </li>
-    `;
+  <div style="display: flex; gap: 40px;">
+    <!-- العمود الأول -->
+    <ul style="list-style: none; padding: 0; margin: 0;">
+      <li>
+        <span class="key">S</span>
+        <span>جاهز للقفز</span>
+      </li>
+      <li>
+        <span class="key">O</span>
+        <span>لفتح المظلة</span>
+      </li>
+      <li>
+        <span class="key">H</span>
+        <span>لإغلاق المظلة</span>
+      </li>
+    </ul>
+
+    <!-- العمود الثاني -->
+    <ul style="list-style: none; padding: 0; margin: 0;">
+      <li>
+        <span class="key">1</span>
+        <span>فتح اليدين</span>
+      </li>
+      <li>
+        <span class="key">2</span>
+        <span>تسكير اليدين</span>
+      </li>
+      <li>
+        <span class="key">3</span>
+        <span>فتح الرجلين</span>
+      </li>
+      <li>
+        <span class="key">4</span>
+        <span>تسكير الرجلين</span>
+      </li>
+    </ul>
+  </div>
+`;
+
+
   panel.appendChild(controlsList);
 
   return elements;
 }
 
 const infoElements = createCombinedInfoPanel();
-let dropSpeed = 50;
 
 let cameraAngle = 0;
 const cameraRadius = 100;
@@ -758,7 +820,6 @@ window.addEventListener("keydown", (event) => {
   }
 
   if (event.key === "o") {
-    dropSpeed = 10;
     if (pilotModel && !pilotHasParachute && ispilotDropping) {
       const parachute_1 = createParachute(0.4, 2.1);
       parachute_1.position.set(0, 3.2, 0);
@@ -795,7 +856,6 @@ window.addEventListener("keydown", (event) => {
 
   // main.js file
   if (event.key === "h") {
-    dropSpeed = 50;
     if (pilotModel && pilotHasParachute && ispilotDropping) {
       pilotHasParachute = false;
       parachute_1_Model.visible = false;
@@ -846,13 +906,24 @@ window.addEventListener("wheel", (event) => {
 // render loop
 // render loop
 const renderloop = () => {
+  const fallSpeedFactor = 3.0; // adjust this value to control visual speed
+
   if (planeModel) {
-    planeModel.position.set(0, groundLevel + PARAMS["airplaneHeight"], 0);
+    planeModel.position.set(
+      0,
+      groundLevel + PARAMS["airplaneHeight"] * fallSpeedFactor,
+      0
+    );
   }
 
   if (window.isSimulationRunning && pilotModel && window.parachute) {
     const physicsHeight = window.parachute.position.y;
-    const mappedHeight = physicsHeight + groundLevel;
+
+    // scale factor to make the fall look faster
+
+    const mappedHeight = groundLevel + physicsHeight * fallSpeedFactor;
+
+    // const mappedHeight = physicsHeight + groundLevel;
 
     pilotModel.position.y = mappedHeight;
     pilotModel.position.x = window.parachute.position.x;
@@ -878,6 +949,11 @@ const renderloop = () => {
       parachute_3_Model.visible = false;
       parachute_4_Model.visible = false;
     }
+    pilotModel.rotation.z = 0;
+    if (pilotModel) pilotModel.visible = true;
+    if (pilotArmsModel) pilotArmsModel.visible = false;
+    if (pilotLegsModel) pilotLegsModel.visible = false;
+    if (pilotArmsLegsModel) pilotArmsLegsModel.visible = false;
   }
 
   if (currentCameraTarget === "pilot" && pilotModel) {
@@ -926,7 +1002,7 @@ const renderloop = () => {
   if (pilotModel && window.parachute) {
     const altitude = Math.max(
       0,
-      Math.round(pilotModel.position.y - groundLevel)
+      Math.round((pilotModel.position.y - groundLevel) / fallSpeedFactor)
     );
     const accelerationY = window.parachute.acceleration.y;
     const velocityY = window.parachute.velocity.y.toFixed(2);
@@ -935,15 +1011,17 @@ const renderloop = () => {
     const posZ = window.parachute.position.z.toFixed(2);
     const yawAngle = window.parachute.yawAngle.toFixed(0);
 
-        infoElements.altitude.innerText = `${altitude}`;
-        infoElements.velocity.innerText = `${-velocityY}`;
-        // infoElements.acceleration.innerText = `${-accelerationY.toFixed(2)}`;
-        infoElements.acceleration.innerText = `${Math.abs(accelerationY).toFixed(2)}`;
-        infoElements.posX.innerText = `${posX}`;
-        infoElements.posY.innerText = `${posY}`;
-        infoElements.posZ.innerText = `${posZ}`;
-        infoElements.yaw.innerText = `${yawAngle}`;
-    }
+    infoElements.altitude.innerText = `${altitude}`;
+    infoElements.velocity.innerText = `${-velocityY}`;
+    // infoElements.acceleration.innerText = `${-accelerationY.toFixed(2)}`;
+    infoElements.acceleration.innerText = `${Math.abs(accelerationY).toFixed(
+      2
+    )}`;
+    infoElements.posX.innerText = `${posX}`;
+    infoElements.posY.innerText = `${posY}`;
+    infoElements.posZ.innerText = `${posZ}`;
+    infoElements.yaw.innerText = `${yawAngle}`;
+  }
 
   renderer.render(scene, camera);
   window.requestAnimationFrame(renderloop);
