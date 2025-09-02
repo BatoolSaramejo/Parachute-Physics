@@ -271,8 +271,13 @@ export class Parachute {
         this.position.y = 0;
 
        // 💡 خطوة جديدة: حفظ قيمة سرعة الهبوط النهائية
-        const finalImpactVelocity = this.velocity.y;
-        
+        // constructor
+this.finalImpactVelocity = 0;  // جديدة
+
+// داخل update(dt) عند الهبوط
+this.finalImpactVelocity = Math.abs(this.velocity.y);  // سرعة الهبوط الأخيرة بدون إشارة
+this.reboundVelocity = Math.abs(-e * finalImpactVelocity); // السرعة الارتدادية، إيجابية
+
  
         console.log(`سرعة الهبوط النهائية: ${finalImpactVelocity.toFixed(2)} م/ث`);
 

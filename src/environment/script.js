@@ -163,8 +163,6 @@ pane.on("change", (ev) => {
     window.parachute.wind.z = ev.value;
     console.log(`💨 قوة الرياح على محور Z: ${ev.value} نيوتن`);
   }
-
-  // 🆕 جديد: تحديث شد الحبل الأيسر
   if (ev.presetKey === "tensionLeft") {
     window.parachute.tensionLeft = ev.value;
     console.log(`⬅️ شد الحبل الأيسر: ${ev.value} نيوتن`);
@@ -176,8 +174,6 @@ pane.on("change", (ev) => {
     //   pilotModel.rotation.z = 0;
     // }
   }
-
-  // 🆕 جديد: تحديث شد الحبل الأيمن
   if (ev.presetKey === "tensionRight") {
     window.parachute.tensionRight = ev.value;
     console.log(`➡️ شد الحبل الأيمن: ${ev.value} نيوتن`);
@@ -609,9 +605,9 @@ function createCombinedInfoPanel() {
   const elements = {};
   const motionPoints = [
     { label: "الارتفاع", key: "altitude", unit: " m   " },
-    { label: "السرعة الارتدادية", key: "velocity", unit: " m/s   " },
+    { label: "السرعة الارتدادية", key: "reboundVelocity", unit: " m/s   " },
     { label: "التسارع", key: "acceleration", unit: " m/s²    " },
-    { label: "سرعة الهبوط", key: "finalImpactVelocity", unit: " m/s    " }
+    { label: "السرعة النهائية", key: "finalImpactVelocity", unit: " m/s²    " },
   ];
 
   motionPoints.forEach((item) => {
@@ -682,6 +678,7 @@ function createCombinedInfoPanel() {
 
   const controlsList = document.createElement("ul");
   controlsList.classList.add("controls-list");
+
   controlsList.innerHTML = `
   <div style="display: flex; justify-content: space-between; gap: 20px; width: 100%;">
     <!-- العمود الأول -->
@@ -1002,26 +999,52 @@ const renderloop = () => {
     const altitude = Math.max(
       0,
       Math.round((pilotModel.position.y - groundLevel) / fallSpeedFactor)
-    );
-    const accelerationY = window.parachute.acceleration.y;
-    const velocityY = window.parachute.velocity.y.toFixed(2);
-    const posX = window.parachute.position.x.toFixed(2);
-    const posY = window.parachute.position.y.toFixed(2);
-    const posZ = window.parachute.position.z.toFixed(2);
-    const yawAngle = window.parachute.yawAngle.toFixed(0);
+     );
 
-    infoElements.altitude.innerText = `${altitude}`;
-    infoElements.velocity.innerText = `${-velocityY}`;
-    // infoElements.acceleration.innerText = `${-accelerationY.toFixed(2)}`;
-    infoElements.acceleration.innerText = `${Math.abs(accelerationY).toFixed(2)}`;
-    infoElements.finalImpactVelocity.innerText = `${Math.abs(window.parachute.finalImpactVelocity).toFixed(2)}`;
-    infoElements.posX.innerText = `${posX}`;
-    infoElements.posY.innerText = `${posY}`;
-    infoElements.posZ.innerText = `${posZ}`;
-    infoElements.yaw.innerText = `${yawAngle}`;
+     const accelerationY = window.parachute.acceleration.y;
+     
+  // تأكد من وجود القيم قبل استخدام toFixed
+  const reboundVelocity = window.parachute.reboundVelocity !== undefined
+  ? window.parachute.reboundVelocity.toFixed(2)
+  : "0.00";
+
+const finalImpactVelocity = window.parachute.finalImpactVelocity !== undefined
+  ? window.parachute.finalImpactVelocity.toFixed(2)
+  : "0.00";
+     const posX = window.parachute.position.x.toFixed(2);
+     const posY = window.parachute.position.y.toFixed(2);
+     const posZ = window.parachute.position.z.toFixed(2);
+     const yawAngle = window.parachute.yawAngle.toFixed(0);
    
+     infoElements.altitude.innerText = `${altitude}`;
+     infoElements.reboundVelocity.innerText = `${-reboundVelocity}`;
+     infoElements.finalImpactVelocity.innerText = `${finalImpactVelocity}`;
+     infoElements.acceleration.innerText = `${Math.abs(accelerationY).toFixed(2)}`;
+     infoElements.posX.innerText = `${posX}`;
+     infoElements.posY.innerText = `${posY}`;
+     infoElements.posZ.innerText = `${posZ}`;
+     infoElements.yaw.innerText = `${yawAngle}`;
+   }
+   
+   
+  //   const accelerationY = window.parachute.acceleration.y;
+  //   const reboundVelocity = window.parachute.reboundVelocity.toFixed(2);
+  //   const posX = window.parachute.position.x.toFixed(2);
+  //   const posY = window.parachute.position.y.toFixed(2);
+  //   const posZ = window.parachute.position.z.toFixed(2);
+  //   const yawAngle = window.parachute.yawAngle.toFixed(0);
+  //   //const finalImpactVelocity = window.parachute.finalImpactVelocity.toFixed(2);
 
-  }
+  //   infoElements.altitude.innerText = `${altitude}`;
+  //   infoElements.reboundVelocity.innerText = `${-reboundVelocity}`;
+  //   infoElements.acceleration.innerText = `${Math.abs(accelerationY).toFixed(2)}`;
+  //   infoElements.posX.innerText = `${posX}`;
+  //   infoElements.posY.innerText = `${posY}`;
+  //   infoElements.posZ.innerText = `${posZ}`;
+  //   infoElements.yaw.innerText = `${yawAngle}`;
+  //  // infoElements.finalImpactVelocity.innerText = `${finalImpactVelocity}`;
+  // }
+
   renderer.render(scene, camera);
   window.requestAnimationFrame(renderloop);
 };
