@@ -45,6 +45,9 @@ export class Parachute {
     this.reachedTerminalVelocity = false;
     this.hasStoppedRotation = false; // متغير لمنع تكرار الرسالة
     this.wind = options.wind || new Vector3(0, 0, 0);
+
+    // إضافة جديدة: متغير للسرعة الارتدادية، يبدأ بـ 0
+    this.reboundVelocity = 0;
   }
 
   gravityForce() {
@@ -268,20 +271,24 @@ export class Parachute {
         this.position.y = 0;
 
        // 💡 خطوة جديدة: حفظ قيمة سرعة الهبوط النهائية
-       // هي اقيمة يلي رح تظهرلي السرعة النهائية =0 
         const finalImpactVelocity = this.velocity.y;
         
  
         console.log(`سرعة الهبوط النهائية: ${finalImpactVelocity.toFixed(2)} م/ث`);
-        console.log(`سرعة الارتداد: ${this.velocity.y.toFixed(2)} م/ث`);
+
       //جديد جديد وحصري من عنا وبس
       // عكس السرعة بمعامل الارتداد المناسب
         const e = restitution[this.surfaceType] || 0.0;
-        this.velocity.y *= -e;  // هي سرعة الارتداد
+        this.reboundVelocity = -e * finalImpactVelocity;  // سرعة الارتداد (إيجابية)
 
-      if (Math.abs(this.velocity.y) < 0.01) {
-        this.velocity.y = 0;
+        console.log(`سرعة الارتداد: ${this.reboundVelocity.toFixed(2)} م/ث`);
+
+      if (Math.abs(this.reboundVelocity) < 0.01) {
+        this.reboundVelocity = 0;
       } 
+
+      this.velocity.y = 0; // صفر سرعة المظلي الرئيسية
+
       this.angularVelocity = new Vector3(0, 0, 0);
       this.orientation = new Vector3(0, 0, 0); // 🔹 إعادة تعيين كل الزوايا
       this.yawAngle = 0;
