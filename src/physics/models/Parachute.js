@@ -169,7 +169,7 @@ export class Parachute {
 
     if (this.position.y <= 0 && this.velocity.y < 0) {
       const deltaV = Math.abs(this.velocity.y);
-    total = total.add(this.impactForce(this.velocity.y).negate());
+    total = total.add(this.impactForce(this.velocity.y));
     }
 
     return total;
