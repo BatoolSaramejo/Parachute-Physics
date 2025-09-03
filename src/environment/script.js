@@ -711,11 +711,11 @@ function createCombinedInfoPanel() {
       </li>
       <li>
         <span class="key">3</span>
-        <span>فتح الرجلين</span>
+        <span>ضم الرجلين</span>
       </li>
       <li>
         <span class="key">4</span>
-        <span>تسكير الرجلين</span>
+        <span>فرد الرجلين</span>
       </li>
     </ul>
   </div>
