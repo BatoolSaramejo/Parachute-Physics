@@ -75,8 +75,8 @@ pane.addInput(PARAMS, "groundType", {
 
 const yawDampingInput = pane.addInput(PARAMS, "yawDamping", {
   min: 0.5,
-  max: 60,
-  step: 0.01,
+  max: 10,
+  step: 0.1,
 });
 
 pane
@@ -859,7 +859,7 @@ window.addEventListener("wheel", (event) => {
 
 // render loop
 const renderloop = () => {
-  const fallSpeedFactor = 3.0;
+  const fallSpeedFactor = 1.0;
 
   if (planeModel) {
     planeModel.position.set(
