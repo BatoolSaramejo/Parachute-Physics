@@ -37,17 +37,16 @@ skybox.position.y = -25000;
 scene.add(skybox);
 
 let PARAMS = {
-  skydiverMass: 60, // kg
-  dragCoeff: 1.2, // typical for a human + parachute
+  skydiverMass: 60, 
+  dragCoeff: 1.2, 
   airplaneHeight: 1500,
-  groundType: "hard", // sand, water, hard
-  //   ropeStrength: 500, // Newtons before breaking
-  windX: 0, // 🆕 جديد: قوة الرياح على محور X
-  windZ: 0, // 🆕 جديد: قوة الرياح على محور Z
-  tensionLeft: 0, // 🆕 جديد: شد الحبل الأيسر
-  tensionRight: 0, // 🆕 جديد: شد الحبل الأيمن
-  yawDamping: 0.5, // arbitrary damping factor
-  armLength: 1, // meters
+  groundType: "hard", 
+  windX: 0, 
+  windZ: 0, 
+  tensionLeft: 0, 
+  tensionRight: 0, 
+  yawDamping: 0.5, 
+  armLength: 1, 
   legPosture: 0,
   openParachuteArea: 15,
 };
@@ -57,14 +56,14 @@ pane
   .addInput(PARAMS, "skydiverMass", { min: 60, max: 114, step: 1 })
   .on("change", (ev) => {
     parachute.mass = ev.value;
-    console.log(`⚖️ تم تغيير الكتلة إلى ${parachute.mass} كغ`);
+    // console.log(` تم تغيير الكتلة إلى ${parachute.mass} كغ`);
   });
 
 // Drag coefficient
 pane.addInput(PARAMS, "dragCoeff", { min: 0.5, max: 2.5, step: 0.01 });
 
 // Airplane height
-pane.addInput(PARAMS, "airplaneHeight", { min: 1500, max: 3000, step: 100 });
+pane.addInput(PARAMS, "airplaneHeight", { min: 3000, max: 4000, step: 100 });
 
 // Ground type
 pane.addInput(PARAMS, "groundType", {
@@ -75,7 +74,7 @@ pane.addInput(PARAMS, "groundType", {
 });
 
 const yawDampingInput = pane.addInput(PARAMS, "yawDamping", {
-  min: 0.0,
+  min: 0.5,
   max: 60,
   step: 0.01,
 });
@@ -89,9 +88,8 @@ pane
   .on("change", (ev) => {
     if (window.parachute) {
       window.parachute.openArea = ev.value;
-      console.log(`🪂 تم تغيير مساحة المظلة المفتوحة إلى ${ev.value} متر مربع`);
+      // console.log(`🪂 تم تغيير مساحة المظلة المفتوحة إلى ${ev.value} متر مربع`);
       if (parachute_1_Model) {
-        // console.log(parachute_1_Model.position.y);
         parachute_1_Model.scale.x = 1.1 + (ev.value - 20) / 200;
         parachute_1_Model.scale.y = 1.1 + (ev.value - 20) / 200;
         parachute_1_Model.scale.z = 1.1 + (ev.value - 20) / 200;
